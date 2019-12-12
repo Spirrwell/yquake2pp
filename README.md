@@ -1,17 +1,13 @@
-# Yamagi Quake II
+# Yamagi Quake II C++
 
-Yamagi Quake II is an enhanced client for id Software's Quake
-II with focus on offline and coop gameplay. Both the gameplay and the graphics
-are unchanged, but many bugs in the last official release were fixed and some
-nice to have features like widescreen support and a modern OpenGL 3.2 renderer
-were added. Unlike most other Quake II source ports Yamagi Quake II is fully 64-bit
-clean. It works perfectly on modern processors and operating systems. Yamagi
-Quake II runs on nearly all common platforms; including FreeBSD, Linux, OpenBSD,
-Windows and macOS (experimental).
+Yamagi Quake II C++ is based on the original Yamagi Quake II client
+that can be found here: https://github.com/yquake2/yquake2
 
-This code is built upon Icculus Quake II, which itself is based on Quake II
-3.21. Yamagi Quake II is released under the terms of the GPL version 2. See the
-LICENSE file for further information.
+This is intended to be a fork that supports C++, as well as
+support for targeting Visual Studio.
+
+## Why?
+I dunno, I felt like it.
 
 ## Documentation
 
@@ -20,7 +16,4 @@ version can be found here: [doc/010_index.md](doc/010_index.md)
 
 ## Releases
 
-The official releases (including Windows binaries) can be found at our
-homepage: https://www.yamagi.org/quake2  
-**Unsupported** preview builds for Windows can be found at
-https://deponie.yamagi.org/quake2/misc/
+TODO
