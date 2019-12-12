@@ -153,7 +153,7 @@ LM_BuildPolygonFromSurface(msurface_t *fa)
 	VectorClear(total);
 
 	/* draw texture */
-	poly = Hunk_Alloc(sizeof(glpoly_t) +
+	poly = (glpoly_t*)Hunk_Alloc(sizeof(glpoly_t) +
 		   (lnumverts - 4) * VERTEXSIZE * sizeof(float));
 	poly->next = fa->polys;
 	poly->flags = fa->flags;

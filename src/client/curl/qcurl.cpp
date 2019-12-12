@@ -141,7 +141,7 @@ qboolean qcurlInit(void)
 
 	// libcurl loaded sucessfully, connect the pointers.
 	#define CONCURL(var, sym) do { \
-		var = Sys_GetProcAddress(curlhandle, sym); \
+		var = (decltype(var))Sys_GetProcAddress(curlhandle, sym); \
 		if (!var) goto error; \
 	} while(0)
 	

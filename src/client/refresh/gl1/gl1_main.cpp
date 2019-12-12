@@ -426,9 +426,9 @@ R_DrawParticles2(int num_particles, const particle_t particles[],
 	float scale;
 	byte color[4];
 
-	GLfloat vtx[3*num_particles*3];
-	GLfloat tex[2*num_particles*3];
-	GLfloat clr[4*num_particles*3];
+	GLfloat *vtx = (GLfloat*)malloc(3*num_particles*3*sizeof(GLfloat));
+	GLfloat *tex = (GLfloat*)malloc(2*num_particles*3*sizeof(GLfloat));
+	GLfloat *clr = (GLfloat*)malloc(4*num_particles*3*sizeof(GLfloat));
 	unsigned int index_vtx = 0;
 	unsigned int index_tex = 0;
 	unsigned int index_clr = 0;
@@ -510,6 +510,10 @@ R_DrawParticles2(int num_particles, const particle_t particles[],
 	glColor4f(1, 1, 1, 1);
 	glDepthMask(1); /* back to normal Z buffering */
 	R_TexEnv(GL_REPLACE);
+
+	free(clr);
+	free(tex);
+	free(vtx);
 }
 
 void
@@ -524,8 +528,8 @@ R_DrawParticles(void)
 		unsigned char color[4];
 		const particle_t *p;
 
-		GLfloat vtx[3*r_newrefdef.num_particles];
-		GLfloat clr[4*r_newrefdef.num_particles];
+		GLfloat *vtx = (GLfloat*)malloc(3*r_newrefdef.num_particles*sizeof(GLfloat));
+		GLfloat *clr = (GLfloat*)malloc(4*r_newrefdef.num_particles*sizeof(GLfloat));
 		unsigned int index_vtx = 0;
 		unsigned int index_clr = 0;
 
@@ -563,6 +567,9 @@ R_DrawParticles(void)
 		glColor4f( 1, 1, 1, 1 );
 		glDepthMask(GL_TRUE);
 		glEnable(GL_TEXTURE_2D);
+
+		free(clr);
+		free(vtx);
 	}
 	else
 	{
@@ -1327,7 +1334,7 @@ R_SetMode(void)
 	vid.width = r_customwidth->value;
 	vid.height = r_customheight->value;
 
-	if ((err = SetMode_impl(&vid.width, &vid.height, r_mode->value,
+	if ((err = (rserr_t)SetMode_impl(&vid.width, &vid.height, r_mode->value,
 					 fullscreen)) == rserr_ok)
 	{
 		if (r_mode->value == -1)
@@ -1347,7 +1354,7 @@ R_SetMode(void)
 			vid_fullscreen->modified = false;
 			R_Printf(PRINT_ALL, "ref_gl::R_SetMode() - fullscreen unavailable in this mode\n");
 
-			if ((err = SetMode_impl(&vid.width, &vid.height, r_mode->value, 0)) == rserr_ok)
+			if ((err = (rserr_t)SetMode_impl(&vid.width, &vid.height, r_mode->value, 0)) == rserr_ok)
 			{
 				return true;
 			}
@@ -1361,7 +1368,7 @@ R_SetMode(void)
 				ri.Cvar_SetValue("gl_msaa_samples", 0.0f);
 				gl_msaa_samples->modified = false;
 
-				if ((err = SetMode_impl(&vid.width, &vid.height, r_mode->value, 0)) == rserr_ok)
+				if ((err = (rserr_t)SetMode_impl(&vid.width, &vid.height, r_mode->value, 0)) == rserr_ok)
 				{
 					return true;
 				}
@@ -1377,7 +1384,7 @@ R_SetMode(void)
 		}
 
 		/* try setting it back to something safe */
-		if ((err = SetMode_impl(&vid.width, &vid.height, gl_state.prev_mode, 0)) != rserr_ok)
+		if ((err = (rserr_t)SetMode_impl(&vid.width, &vid.height, gl_state.prev_mode, 0)) != rserr_ok)
 		{
 			R_Printf(PRINT_ALL, "ref_gl::R_SetMode() - could not revert to safe mode\n");
 			return false;
@@ -1412,7 +1419,7 @@ RI_Init()
 
 	/* set our "safe" mode */
 	gl_state.prev_mode = 4;
-	gl_state.stereo_mode = gl1_stereo->value;
+	gl_state.stereo_mode = (stereo_modes)((int)gl1_stereo->value);
 
 	/* create the window and set up the context */
 	if (!R_SetMode())
@@ -1598,8 +1605,8 @@ RI_BeginFrame(float camera_separation)
 	// force a vid_restart if gl1_stereo has been modified.
 	if ( gl_state.stereo_mode != gl1_stereo->value ) {
 		// If we've gone from one mode to another with the same special buffer requirements there's no need to restart.
-		if ( GL_GetSpecialBufferModeForStereoMode( gl_state.stereo_mode ) == GL_GetSpecialBufferModeForStereoMode( gl1_stereo->value )  ) {
-			gl_state.stereo_mode = gl1_stereo->value;
+		if ( GL_GetSpecialBufferModeForStereoMode( gl_state.stereo_mode ) == GL_GetSpecialBufferModeForStereoMode( (stereo_modes)((int)gl1_stereo->value) )  ) {
+			gl_state.stereo_mode = (stereo_modes)((int)gl1_stereo->value);
 		}
 		else
 		{
@@ -1866,49 +1873,52 @@ extern void RI_SetPalette(const unsigned char *palette);
 extern qboolean RI_IsVSyncActive(void);
 extern void RI_EndFrame(void);
 
-Q2_DLL_EXPORTED refexport_t
-GetRefAPI(refimport_t imp)
+extern "C"
 {
-	refexport_t re = {0};
+	Q2_DLL_EXPORTED refexport_t
+	GetRefAPI(refimport_t imp)
+	{
+		refexport_t re = {0};
 
-	ri = imp;
+		ri = imp;
 
-	re.api_version = API_VERSION;
+		re.api_version = API_VERSION;
 
-	re.Init = RI_Init;
-	re.Shutdown = RI_Shutdown;
-	re.PrepareForWindow = RI_PrepareForWindow;
-	re.InitContext = RI_InitContext;
-	re.ShutdownContext = RI_ShutdownContext;
-	re.IsVSyncActive = RI_IsVSyncActive;
-	re.BeginRegistration = RI_BeginRegistration;
-	re.RegisterModel = RI_RegisterModel;
-	re.RegisterSkin = RI_RegisterSkin;
+		re.Init = RI_Init;
+		re.Shutdown = RI_Shutdown;
+		re.PrepareForWindow = RI_PrepareForWindow;
+		re.InitContext = RI_InitContext;
+		re.ShutdownContext = RI_ShutdownContext;
+		re.IsVSyncActive = RI_IsVSyncActive;
+		re.BeginRegistration = RI_BeginRegistration;
+		re.RegisterModel = RI_RegisterModel;
+		re.RegisterSkin = RI_RegisterSkin;
 
-	re.SetSky = RI_SetSky;
-	re.EndRegistration = RI_EndRegistration;
+		re.SetSky = RI_SetSky;
+		re.EndRegistration = RI_EndRegistration;
 
-	re.RenderFrame = RI_RenderFrame;
+		re.RenderFrame = RI_RenderFrame;
 
-	re.DrawFindPic = RDraw_FindPic;
+		re.DrawFindPic = RDraw_FindPic;
 
-	re.DrawGetPicSize = RDraw_GetPicSize;
-	//re.DrawPic = Draw_Pic;
-	re.DrawPicScaled = RDraw_PicScaled;
-	re.DrawStretchPic = RDraw_StretchPic;
-	//re.DrawChar = Draw_Char;
-	re.DrawCharScaled = RDraw_CharScaled;
-	re.DrawTileClear = RDraw_TileClear;
-	re.DrawFill = RDraw_Fill;
-	re.DrawFadeScreen = RDraw_FadeScreen;
+		re.DrawGetPicSize = RDraw_GetPicSize;
+		//re.DrawPic = Draw_Pic;
+		re.DrawPicScaled = RDraw_PicScaled;
+		re.DrawStretchPic = RDraw_StretchPic;
+		//re.DrawChar = Draw_Char;
+		re.DrawCharScaled = RDraw_CharScaled;
+		re.DrawTileClear = RDraw_TileClear;
+		re.DrawFill = RDraw_Fill;
+		re.DrawFadeScreen = RDraw_FadeScreen;
 
-	re.DrawStretchRaw = RDraw_StretchRaw;
+		re.DrawStretchRaw = RDraw_StretchRaw;
 
-	re.SetPalette = RI_SetPalette;
-	re.BeginFrame = RI_BeginFrame;
-	re.EndFrame = RI_EndFrame;
+		re.SetPalette = RI_SetPalette;
+		re.BeginFrame = RI_BeginFrame;
+		re.EndFrame = RI_EndFrame;
 
-	return re;
+		return re;
+	}
 }
 
 void R_Printf(int level, const char* msg, ...)
@@ -1924,7 +1934,7 @@ void R_Printf(int level, const char* msg, ...)
  * (shared.c, rand.c, flash.c, mem.c/hunk.c) can link
  */
 void
-Sys_Error(char *error, ...)
+Sys_Error(const char *error, ...)
 {
 	va_list argptr;
 	char text[4096]; // MAXPRINTMSG == 4096
@@ -1937,7 +1947,7 @@ Sys_Error(char *error, ...)
 }
 
 void
-Com_Printf(char *msg, ...)
+Com_Printf(const char *msg, ...)
 {
 	va_list argptr;
 	va_start(argptr, msg);

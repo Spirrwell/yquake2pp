@@ -207,7 +207,7 @@ R_SubdividePolygon(int numverts, float *verts)
 	}
 
 	/* add a point in the center to help keep warp valid */
-	poly = Hunk_Alloc(sizeof(glpoly_t) + ((numverts - 4) + 2) * VERTEXSIZE * sizeof(float));
+	poly = (glpoly_t*)Hunk_Alloc(sizeof(glpoly_t) + ((numverts - 4) + 2) * VERTEXSIZE * sizeof(float));
 	poly->next = warpface->polys;
 	warpface->polys = poly;
 	poly->numverts = numverts + 2;
@@ -302,7 +302,7 @@ R_EmitWaterPolys(msurface_t *fa)
 	{
 		p = bp;
 
-        GLfloat tex[2*p->numverts];
+		GLfloat *tex = (GLfloat*)malloc(2*p->numverts*sizeof(GLfloat));
         unsigned int index_tex = 0;
 
 		for ( i = 0, v = p->verts [ 0 ]; i < p->numverts; i++, v += VERTEXSIZE )
@@ -329,6 +329,8 @@ R_EmitWaterPolys(msurface_t *fa)
 
         glDisableClientState( GL_VERTEX_ARRAY );
         glDisableClientState( GL_TEXTURE_COORD_ARRAY );
+
+		free(tex);
 	}
 }
 

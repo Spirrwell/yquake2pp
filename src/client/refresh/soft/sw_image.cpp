@@ -189,7 +189,7 @@ R_LoadPic (char *name, byte *pic, int width, int height, imagetype_t type)
 
 	size = width * height;
 	full_size = R_GetImageMipsSize(size);
-	image->pixels[0] = malloc(full_size);
+	image->pixels[0] = (byte*)malloc(full_size);
 	if (!image->pixels[0])
 	{
 		ri.Sys_Error(ERR_FATAL, "%s: Can't allocate image.", __func__);
@@ -258,7 +258,7 @@ R_LoadWal (char *name, imagetype_t type)
 		return r_notexture_mip;
 	}
 
-	image->pixels[0] = malloc (size);
+	image->pixels[0] = (byte*)malloc (size);
 	R_RestoreImagePointers(image, 0);
 
 	if (size > (file_size - ofs))
@@ -339,7 +339,7 @@ R_LoadHiColorImage(char *name, const char* namewe, const char *ext, imagetype_t 
 			}
 
 			size8 = R_GetImageMipsSize(width * height);
-			pic8 = malloc(size8);
+			pic8 = (byte*)malloc(size8);
 
 			if (width != realwidth || height != realheight)
 			{
@@ -350,7 +350,7 @@ R_LoadHiColorImage(char *name, const char* namewe, const char *ext, imagetype_t 
 
 				// resize image
 				size32 = width * height * 4;
-				pic32 = malloc(size32);
+				pic32 = (byte*)malloc(size32);
 
 				if (ResizeSTB(pic, width, height,
 					      pic32, realwidth, realheight))
@@ -566,7 +566,7 @@ R_InitImages (void)
 		// code never returns after ERR_FATAL
 		return;
 	}
-	d_16to8table = malloc(0x10000);
+	d_16to8table = (unsigned char*)malloc(0x10000);
 	memcpy(d_16to8table, table16to8, 0x10000);
 	ri.FS_FreeFile((void *)table16to8);
 

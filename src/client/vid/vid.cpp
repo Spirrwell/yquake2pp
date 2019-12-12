@@ -41,7 +41,7 @@ static unsigned char*
 compress_for_stbiw(unsigned char *data, int data_len, int *out_len, int quality)
 {
 	uLongf bufSize = compressBound(data_len);
-	unsigned char* buf = malloc(bufSize);
+	unsigned char* buf = (unsigned char*)malloc(bufSize);
 
 	if (buf == NULL)
 	{
@@ -361,7 +361,7 @@ VID_LoadRenderer(void)
 	Com_Printf("LoadLibrary(%s)\n", reflib_name);
 
 	// Mkay, let's load the requested renderer.
-	GetRefAPI = Sys_LoadLibrary(reflib_path, "GetRefAPI", &reflib_handle);
+	GetRefAPI = (GetRefAPI_t)Sys_LoadLibrary(reflib_path, "GetRefAPI", &reflib_handle);
 
 	// Okay, we couldn't load it. It's up to the
 	// caller to recover from this.

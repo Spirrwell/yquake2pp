@@ -51,7 +51,7 @@ static size_t console_textlen;
 /* ================================================================ */
 
 void
-Sys_Error(char *error, ...)
+Sys_Error(const char *error, ...)
 {
 	va_list argptr;
 	char text[1024];
@@ -67,7 +67,7 @@ Sys_Error(char *error, ...)
 	va_end(argptr);
 	fprintf(stderr, "Error: %s\n", text);
 
-	MessageBox(NULL, text, "Error", 0 /* MB_OK */);
+	MessageBoxA(NULL, text, "Error", 0 /* MB_OK */);
 
 	/* Close stdout and stderr */
 #ifndef DEDICATED_ONLY
@@ -392,7 +392,8 @@ Sys_UnloadGame(void)
 void *
 Sys_GetGameAPI(void *parms)
 {
-	void *(*GetGameAPI)(void *);
+	typedef void*(*GetGameAPI_t)(void*);
+	GetGameAPI_t GetGameAPI;
 	char name[MAX_OSPATH];
 	WCHAR wname[MAX_OSPATH];
 	char *path = NULL;
@@ -437,7 +438,7 @@ Sys_GetGameAPI(void *parms)
 		}
 	}
 
-	GetGameAPI = (void *)GetProcAddress(game_library, "GetGameAPI");
+	GetGameAPI = (GetGameAPI_t)GetProcAddress(game_library, "GetGameAPI");
 
 	if (!GetGameAPI)
 	{
@@ -588,7 +589,7 @@ Sys_RemoveDir(const char *path)
 void *
 Sys_GetProcAddress(void *handle, const char *sym)
 {
-	return GetProcAddress(handle, sym);
+	return (void*)GetProcAddress((HMODULE)handle, sym);
 }
 
 void
@@ -599,7 +600,7 @@ Sys_FreeLibrary(void *handle)
 		return;
 	}
 
-	if (!FreeLibrary(handle))
+	if (!FreeLibrary((HMODULE)handle))
 	{
 		Com_Error(ERR_FATAL, "FreeLibrary failed on %p", handle);
 	}
@@ -626,12 +627,12 @@ Sys_LoadLibrary(const char *path, const char *sym, void **handle)
 
 	if (sym)
 	{
-		entry = GetProcAddress(module, sym);
+		entry = (void*)GetProcAddress(module, sym);
 
 		if (!entry)
 		{
-			Com_Printf("%s failed: GetProcAddress returned %lu on %s\n",
-			           __func__, GetLastError(), path);
+			Com_Printf("%s failed: GetProcAddress returned %lu on %s for %s\n",
+			           __func__, GetLastError(), path, sym);
 			FreeLibrary(module);
 			return NULL;
 		}
@@ -736,7 +737,7 @@ Sys_SetHighDPIMode(void)
 	HRESULT(WINAPI *SetProcessDpiAwareness)(YQ2_PROCESS_DPI_AWARENESS dpiAwareness) = NULL;
 
 
-	HINSTANCE userDLL = LoadLibrary("USER32.DLL");
+	HINSTANCE userDLL = LoadLibraryA("USER32.DLL");
 
 	if (userDLL)
 	{
@@ -745,7 +746,7 @@ Sys_SetHighDPIMode(void)
 	}
 
 
-	HINSTANCE shcoreDLL = LoadLibrary("SHCORE.DLL");
+	HINSTANCE shcoreDLL = LoadLibraryA("SHCORE.DLL");
 
 	if (shcoreDLL)
 	{

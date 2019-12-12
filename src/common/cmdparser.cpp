@@ -52,7 +52,6 @@ int alias_count; /* for detecting runaway loops */
 cmdalias_t *cmd_alias;
 qboolean cmd_wait;
 static int cmd_argc;
-static int cmd_argc;
 static char *cmd_argv[MAX_STRING_TOKENS];
 static char *cmd_null_string = "";
 static char cmd_args[MAX_STRING_CHARS];
@@ -111,7 +110,7 @@ Cbuf_InsertText(char *text)
 
 	if (templen)
 	{
-		temp = Z_Malloc(templen);
+		temp = (char*)Z_Malloc(templen);
 		memcpy(temp, cmd_text.data, templen);
 		SZ_Clear(&cmd_text);
 	}
@@ -306,7 +305,7 @@ Cbuf_AddLateCommands(void)
 		return false;
 	}
 
-	text = Z_Malloc(s + 1);
+	text = (char*)Z_Malloc(s + 1);
 	text[0] = 0;
 
 	for (i = 1; i < argc; i++)
@@ -320,7 +319,7 @@ Cbuf_AddLateCommands(void)
 	}
 
 	/* pull out the commands */
-	build = Z_Malloc(s + 1);
+	build = (char*)Z_Malloc(s + 1);
 	build[0] = 0;
 
 	for (i = 0; i < s - 1; i++)
@@ -380,7 +379,7 @@ Cmd_Exec_f(void)
 
 	/* the file doesn't have a trailing 0, so we need to copy it off */
 	/* we also add a newline */
-	f2 = Z_Malloc(len + 2);
+	f2 = (char*)Z_Malloc(len + 2);
 	memcpy(f2, f, len);
 	f2[len] = '\n'; // make sure last line has a newline
 	f2[len+1] = '\0';
@@ -451,7 +450,7 @@ Cmd_Alias_f(void)
 
 	if (!a)
 	{
-		a = Z_Malloc(sizeof(cmdalias_t));
+		a = (cmdalias_t*)Z_Malloc(sizeof(cmdalias_t));
 		a->next = cmd_alias;
 		cmd_alias = a;
 	}
@@ -671,7 +670,7 @@ Cmd_TokenizeString(char *text, qboolean macroExpand)
 
 		if (cmd_argc < MAX_STRING_TOKENS)
 		{
-			cmd_argv[cmd_argc] = Z_Malloc(strlen(com_token) + 1);
+			cmd_argv[cmd_argc] = (char*)Z_Malloc(strlen(com_token) + 1);
 			strcpy(cmd_argv[cmd_argc], com_token);
 			cmd_argc++;
 		}
@@ -700,7 +699,7 @@ Cmd_AddCommand(char *cmd_name, xcommand_t function)
 		}
 	}
 
-	cmd = Z_Malloc(sizeof(cmd_function_t));
+	cmd = (cmd_function_t*)Z_Malloc(sizeof(cmd_function_t));
 	cmd->name = cmd_name;
 	cmd->function = function;
 

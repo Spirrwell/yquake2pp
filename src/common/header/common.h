@@ -60,6 +60,9 @@
 #elif defined(__GNUC__) // GCC and clang should support this attribute
 	#define YQ2_ALIGNAS_SIZE(SIZE)  __attribute__(( __aligned__(SIZE) ))
 	#define YQ2_ALIGNAS_TYPE(TYPE)  __attribute__(( __aligned__(__alignof__(TYPE)) ))
+#elif defined(__cplusplus)
+	#define YQ2_ALIGNAS_SIZE(SIZE)	alignas(SIZE)
+	#define YQ2_ALIGNAS_TYPE(TYPE)	alignas(TYPE)
 #elif defined(_MSC_VER)
 	#define YQ2_ALIGNAS_SIZE(SIZE)  __declspec( align(SIZE) )
 	#define YQ2_ALIGNAS_TYPE(TYPE)  __declspec( align( __alignof(TYPE) ) )
@@ -67,6 +70,9 @@
 	#warning "Please add a case for your compiler here to align correctly"
 	#define YQ2_ALIGNAS_TYPE(TYPE)
 #endif
+
+#define YQ2_MAX(a,b)            (((a) > (b)) ? (a) : (b))
+#define YQ2_MIN(a,b)            (((a) < (b)) ? (a) : (b))
 
 
 /* ================================================================== */
@@ -84,7 +90,7 @@ typedef struct sizebuf_s
 void SZ_Init(sizebuf_t *buf, byte *data, int length);
 void SZ_Clear(sizebuf_t *buf);
 void *SZ_GetSpace(sizebuf_t *buf, int length);
-void SZ_Write(sizebuf_t *buf, void *data, int length);
+void SZ_Write(sizebuf_t *buf, const void *data, int length);
 void SZ_Print(sizebuf_t *buf, char *data);  /* strcats onto the sizebuf */
 
 /* ================================================================== */
@@ -722,11 +728,12 @@ void FS_CreatePath(char *path);
 
 void Com_BeginRedirect(int target, char *buffer, int buffersize, void (*flush)(int, char *));
 void Com_EndRedirect(void);
-void Com_Printf(char *fmt, ...) __attribute__ ((format (printf, 1, 2)));
-void Com_DPrintf(char *fmt, ...) __attribute__ ((format (printf, 1, 2)));
+
+void Com_Printf(const char *fmt, ...);
+void Com_DPrintf(const char *fmt, ...);
 void Com_VPrintf(int print_level, const char *fmt, va_list argptr); /* print_level is PRINT_ALL or PRINT_DEVELOPER */
-void Com_MDPrintf(char *fmt, ...) __attribute__ ((format (printf, 1, 2)));
-void Com_Error(int code, char *fmt, ...) __attribute__ ((format (printf, 2, 3)));
+void Com_MDPrintf(const char *fmt, ...);
+void Com_Error(int code, const char *fmt, ...);
 void Com_Quit(void);
 
 /* Ugly hack: Apprently (our?) MinGW-gcc under Windows
@@ -813,7 +820,7 @@ void SV_Frame(int msec);
 // system.c
 char *Sys_ConsoleInput(void);
 void Sys_ConsoleOutput(char *string);
-void Sys_Error(char *error, ...);
+void Sys_Error(const char *error, ...);
 void Sys_Quit(void);
 void Sys_Init(void);
 char *Sys_GetHomeDir(void);

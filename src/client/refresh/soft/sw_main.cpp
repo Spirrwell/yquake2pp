@@ -444,7 +444,7 @@ RE_Init(void)
 	// create the window
 	RE_BeginFrame( 0 );
 
-	R_Printf(PRINT_ALL, "ref_soft version: "REF_VERSION"\n");
+	R_Printf(PRINT_ALL, "ref_soft version: " REF_VERSION "\n");
 
 	return true;
 }
@@ -529,7 +529,7 @@ R_ReallocateMapBuffers (void)
 				 __func__);
 		}
 
-		lsurfs = malloc (r_cnumsurfs * sizeof(surf_t));
+		lsurfs = (surf_t*)malloc (r_cnumsurfs * sizeof(surf_t));
 		if (!lsurfs)
 		{
 			R_Printf(PRINT_ALL, "%s: Couldn't malloc %d bytes\n",
@@ -566,7 +566,7 @@ R_ReallocateMapBuffers (void)
 		if (r_numallocatedlights < MAXLIGHTS)
 			r_numallocatedlights = MAXLIGHTS;
 
-		blocklights = malloc (r_numallocatedlights * sizeof(light_t));
+		blocklights = (light_t*)malloc (r_numallocatedlights * sizeof(light_t));
 		if (!blocklights)
 		{
 			R_Printf(PRINT_ALL, "%s: Couldn't malloc %d bytes\n",
@@ -596,7 +596,7 @@ R_ReallocateMapBuffers (void)
 		if (r_numallocatededges < NUMSTACKEDGES)
 			r_numallocatededges = NUMSTACKEDGES;
 
-		r_edges = malloc (r_numallocatededges * sizeof(edge_t));
+		r_edges = (edge_t*)malloc (r_numallocatededges * sizeof(edge_t));
 		if (!r_edges)
 		{
 			R_Printf(PRINT_ALL, "%s: Couldn't malloc %d bytes\n",
@@ -627,7 +627,7 @@ R_ReallocateMapBuffers (void)
 		if (r_numallocatedverts < MAXALIASVERTS)
 			r_numallocatedverts = MAXALIASVERTS;
 
-		finalverts = malloc(r_numallocatedverts * sizeof(finalvert_t));
+		finalverts = (finalvert_t*)malloc(r_numallocatedverts * sizeof(finalvert_t));
 		if (!finalverts)
 		{
 			R_Printf(PRINT_ALL, "%s: Couldn't malloc %d bytes\n",
@@ -655,7 +655,7 @@ R_ReallocateMapBuffers (void)
 		if (r_numallocatedtriangles < vid.height)
 			r_numallocatedtriangles = vid.height;
 
-		triangle_spans  = malloc(r_numallocatedtriangles * sizeof(spanpackage_t));
+		triangle_spans  = (spanpackage_t*)malloc(r_numallocatedtriangles * sizeof(spanpackage_t));
 		if (!triangle_spans)
 		{
 			R_Printf(PRINT_ALL, "%s: Couldn't malloc %d bytes\n",
@@ -684,7 +684,7 @@ R_ReallocateMapBuffers (void)
 		if (r_numallocatededgebasespans < vid.width * 8)
 			r_numallocatededgebasespans = vid.width * 8;
 
-		edge_basespans  = malloc(r_numallocatededgebasespans * sizeof(espan_t));
+		edge_basespans  = (espan_t*)malloc(r_numallocatededgebasespans * sizeof(espan_t));
 		if (!edge_basespans)
 		{
 			R_Printf(PRINT_ALL, "%s: Couldn't malloc %d bytes\n",
@@ -1384,7 +1384,7 @@ R_InitGraphics( int width, int height )
 		sc_base = NULL;
 	}
 
-	d_pzbuffer = malloc(vid.width * vid.height * sizeof(zvalue_t));
+	d_pzbuffer = (zvalue_t*)malloc(vid.width * vid.height * sizeof(zvalue_t));
 
 	R_InitCaches();
 
@@ -1719,52 +1719,55 @@ static int RE_PrepareForWindow(void)
 GetRefAPI
 ===============
 */
-Q2_DLL_EXPORTED refexport_t
-GetRefAPI(refimport_t imp)
+extern "C"
 {
-	// struct for save refexport callbacks, copy of re struct from main file
-	// used different variable name for prevent confusion and cppcheck warnings
-	refexport_t	refexport;
+	Q2_DLL_EXPORTED refexport_t
+	GetRefAPI(refimport_t imp)
+	{
+		// struct for save refexport callbacks, copy of re struct from main file
+		// used different variable name for prevent confusion and cppcheck warnings
+		refexport_t	refexport;
 
-	memset(&refexport, 0, sizeof(refexport_t));
-	ri = imp;
+		memset(&refexport, 0, sizeof(refexport_t));
+		ri = imp;
 
-	refexport.api_version = API_VERSION;
+		refexport.api_version = API_VERSION;
 
-	refexport.BeginRegistration = RE_BeginRegistration;
-	refexport.RegisterModel = RE_RegisterModel;
-	refexport.RegisterSkin = RE_RegisterSkin;
-	refexport.DrawFindPic = RE_Draw_FindPic;
-	refexport.SetSky = RE_SetSky;
-	refexport.EndRegistration = RE_EndRegistration;
+		refexport.BeginRegistration = RE_BeginRegistration;
+		refexport.RegisterModel = RE_RegisterModel;
+		refexport.RegisterSkin = RE_RegisterSkin;
+		refexport.DrawFindPic = RE_Draw_FindPic;
+		refexport.SetSky = RE_SetSky;
+		refexport.EndRegistration = RE_EndRegistration;
 
-	refexport.RenderFrame = RE_RenderFrame;
+		refexport.RenderFrame = RE_RenderFrame;
 
-	refexport.DrawGetPicSize = RE_Draw_GetPicSize;
+		refexport.DrawGetPicSize = RE_Draw_GetPicSize;
 
-	refexport.DrawPicScaled = RE_Draw_PicScaled;
-	refexport.DrawStretchPic = RE_Draw_StretchPic;
-	refexport.DrawCharScaled = RE_Draw_CharScaled;
-	refexport.DrawTileClear = RE_Draw_TileClear;
-	refexport.DrawFill = RE_Draw_Fill;
-	refexport.DrawFadeScreen = RE_Draw_FadeScreen;
+		refexport.DrawPicScaled = RE_Draw_PicScaled;
+		refexport.DrawStretchPic = RE_Draw_StretchPic;
+		refexport.DrawCharScaled = RE_Draw_CharScaled;
+		refexport.DrawTileClear = RE_Draw_TileClear;
+		refexport.DrawFill = RE_Draw_Fill;
+		refexport.DrawFadeScreen = RE_Draw_FadeScreen;
 
-	refexport.DrawStretchRaw = RE_Draw_StretchRaw;
+		refexport.DrawStretchRaw = RE_Draw_StretchRaw;
 
-	refexport.Init = RE_Init;
-	refexport.IsVSyncActive = RE_IsVsyncActive;
-	refexport.Shutdown = RE_Shutdown;
-	refexport.InitContext = RE_InitContext;
-	refexport.ShutdownContext = RE_ShutdownContext;
-	refexport.PrepareForWindow = RE_PrepareForWindow;
+		refexport.Init = RE_Init;
+		refexport.IsVSyncActive = RE_IsVsyncActive;
+		refexport.Shutdown = RE_Shutdown;
+		refexport.InitContext = RE_InitContext;
+		refexport.ShutdownContext = RE_ShutdownContext;
+		refexport.PrepareForWindow = RE_PrepareForWindow;
 
-	refexport.SetPalette = RE_SetPalette;
-	refexport.BeginFrame = RE_BeginFrame;
-	refexport.EndFrame = RE_EndFrame;
+		refexport.SetPalette = RE_SetPalette;
+		refexport.BeginFrame = RE_BeginFrame;
+		refexport.EndFrame = RE_EndFrame;
 
-	Swap_Init ();
+		Swap_Init ();
 
-	return refexport;
+		return refexport;
+	}
 }
 
 /*
@@ -2175,7 +2178,7 @@ static void
 SWimp_CreateRender(void)
 {
 	swap_current = 0;
-	swap_buffers = malloc(vid.height * vid.width * sizeof(pixel_t) * 2);
+	swap_buffers = (pixel_t*)malloc(vid.height * vid.width * sizeof(pixel_t) * 2);
 	if (!swap_buffers)
 	{
 		ri.Sys_Error(ERR_FATAL, "%s: Can't allocate swapbuffer.", __func__);
@@ -2188,15 +2191,15 @@ SWimp_CreateRender(void)
 	// Need to rewrite whole frame
 	VID_WholeDamageBuffer();
 
-	sintable = malloc((vid.width+CYCLE) * sizeof(int));
-	intsintable = malloc((vid.width+CYCLE) * sizeof(int));
-	blanktable = malloc((vid.width+CYCLE) * sizeof(int));
+	sintable = (int*)malloc((vid.width+CYCLE) * sizeof(int));
+	intsintable = (int*)malloc((vid.width+CYCLE) * sizeof(int));
+	blanktable = (int*)malloc((vid.width+CYCLE) * sizeof(int));
 
-	newedges = malloc(vid.width * sizeof(edge_t *));
-	removeedges = malloc(vid.width * sizeof(edge_t *));
+	newedges = (edge_t**)malloc(vid.width * sizeof(edge_t *));
+	removeedges = (edge_t**)malloc(vid.width * sizeof(edge_t *));
 
-	warp_rowptr = malloc((vid.width+AMP2*2) * sizeof(byte*));
-	warp_column = malloc((vid.width+AMP2*2) * sizeof(int));
+	warp_rowptr = (byte**)malloc((vid.width+AMP2*2) * sizeof(byte*));
+	warp_column = (int*)malloc((vid.width+AMP2*2) * sizeof(int));
 
 	// count of "out of items"
 	r_outofsurfaces = false;
@@ -2222,7 +2225,7 @@ SWimp_CreateRender(void)
 
 	R_ReallocateMapBuffers();
 
-	r_warpbuffer = malloc(vid.height * vid.width * sizeof(pixel_t));
+	r_warpbuffer = (pixel_t*)malloc(vid.height * vid.width * sizeof(pixel_t));
 
 	if ((vid.width >= 2048) && (sizeof(shift20_t) == 4)) // 2k+ resolution and 32 == shift20_t
 	{
@@ -2235,7 +2238,7 @@ SWimp_CreateRender(void)
 
 	R_InitTurb ();
 
-	vid_polygon_spans = malloc(sizeof(espan_t) * (vid.height + 1));
+	vid_polygon_spans = (espan_t*)malloc(sizeof(espan_t) * (vid.height + 1));
 
 	memset(sw_state.currentpalette, 0, sizeof(sw_state.currentpalette));
 
@@ -2244,7 +2247,7 @@ SWimp_CreateRender(void)
 
 // this is only here so the functions in q_shared.c and q_shwin.c can link
 void
-Sys_Error (char *error, ...)
+Sys_Error (const char *error, ...)
 {
 	va_list		argptr;
 	char		text[1024];
@@ -2257,7 +2260,7 @@ Sys_Error (char *error, ...)
 }
 
 void
-Com_Printf (char *fmt, ...)
+Com_Printf (const char *fmt, ...)
 {
 	va_list		argptr;
 	char		text[1024];
@@ -2286,7 +2289,7 @@ static void
 R_ScreenShot_f(void)
 {
 	int x, y;
-	byte *buffer = malloc(vid.width * vid.height * 3);
+	byte *buffer = (byte*)malloc(vid.width * vid.height * 3);
 	const unsigned char *palette = sw_state.currentpalette;
 
 	if (!buffer)

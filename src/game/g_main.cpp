@@ -80,7 +80,7 @@ cvar_t *sv_maplist;
 
 cvar_t *gib_on;
 
-void SpawnEntities(char *mapname, char *entities, char *spawnpoint);
+void SpawnEntities(const char *mapname, char *entities, const char *spawnpoint);
 void ClientThink(edict_t *ent, usercmd_t *cmd);
 qboolean ClientConnect(edict_t *ent, char *userinfo);
 void ClientUserinfoChanged(edict_t *ent, char *userinfo);
@@ -88,10 +88,10 @@ void ClientDisconnect(edict_t *ent);
 void ClientBegin(edict_t *ent);
 void ClientCommand(edict_t *ent);
 void RunEntity(edict_t *ent);
-void WriteGame(char *filename, qboolean autosave);
-void ReadGame(char *filename);
-void WriteLevel(char *filename);
-void ReadLevel(char *filename);
+void WriteGame(const char *filename, qboolean autosave);
+void ReadGame(const char *filename);
+void WriteLevel(const char *filename);
+void ReadLevel(const char *filename);
 void InitGame(void);
 void G_RunFrame(void);
 
@@ -111,38 +111,41 @@ ShutdownGame(void)
  * with all entry points and global
  * variables
  */
-Q2_DLL_EXPORTED game_export_t *
-GetGameAPI(game_import_t *import)
+extern "C"
 {
-	gi = *import;
+	Q2_DLL_EXPORTED game_export_t *
+	GetGameAPI(game_import_t *import)
+	{
+		gi = *import;
 
-	globals.apiversion = GAME_API_VERSION;
-	globals.Init = InitGame;
-	globals.Shutdown = ShutdownGame;
-	globals.SpawnEntities = SpawnEntities;
+		globals.apiversion = GAME_API_VERSION;
+		globals.Init = InitGame;
+		globals.Shutdown = ShutdownGame;
+		globals.SpawnEntities = SpawnEntities;
 
-	globals.WriteGame = WriteGame;
-	globals.ReadGame = ReadGame;
-	globals.WriteLevel = WriteLevel;
-	globals.ReadLevel = ReadLevel;
+		globals.WriteGame = WriteGame;
+		globals.ReadGame = ReadGame;
+		globals.WriteLevel = WriteLevel;
+		globals.ReadLevel = ReadLevel;
 
-	globals.ClientThink = ClientThink;
-	globals.ClientConnect = ClientConnect;
-	globals.ClientUserinfoChanged = ClientUserinfoChanged;
-	globals.ClientDisconnect = ClientDisconnect;
-	globals.ClientBegin = ClientBegin;
-	globals.ClientCommand = ClientCommand;
+		globals.ClientThink = ClientThink;
+		globals.ClientConnect = ClientConnect;
+		globals.ClientUserinfoChanged = ClientUserinfoChanged;
+		globals.ClientDisconnect = ClientDisconnect;
+		globals.ClientBegin = ClientBegin;
+		globals.ClientCommand = ClientCommand;
 
-	globals.RunFrame = G_RunFrame;
+		globals.RunFrame = G_RunFrame;
 
-	globals.ServerCommand = ServerCommand;
+		globals.ServerCommand = ServerCommand;
 
-	globals.edict_size = sizeof(edict_t);
+		globals.edict_size = sizeof(edict_t);
 
-	/* Initalize the PRNG */
-	randk_seed();
+		/* Initalize the PRNG */
+		randk_seed();
 
-	return &globals;
+		return &globals;
+	}
 }
 
 /*
@@ -150,7 +153,7 @@ GetGameAPI(game_import_t *import)
  * in shared source files can link
  */
 void
-Sys_Error(char *error, ...)
+Sys_Error(const char *error, ...)
 {
 	va_list argptr;
 	char text[1024];
@@ -163,7 +166,7 @@ Sys_Error(char *error, ...)
 }
 
 void
-Com_Printf(char *msg, ...)
+Com_Printf(const char *msg, ...)
 {
 	va_list argptr;
 	char text[1024];

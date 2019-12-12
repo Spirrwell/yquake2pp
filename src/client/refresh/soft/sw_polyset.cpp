@@ -146,7 +146,7 @@ R_PolysetUpdateTables (void)
 		int i;
 
 		skinwidth = r_affinetridesc.skinwidth;
-		skinstart = r_affinetridesc.pskin;
+		skinstart = (byte*)r_affinetridesc.pskin;
 		s = skinstart;
 		for (i=0 ; i<MAX_LBM_HEIGHT ; i++, s+=skinwidth)
 			skintable[i] = s;

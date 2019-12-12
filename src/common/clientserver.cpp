@@ -176,7 +176,7 @@ Com_VPrintf(int print_level, const char *fmt, va_list argptr)
  * to the apropriate place.
  */
 void
-Com_Printf(char *fmt, ...)
+Com_Printf(const char *fmt, ...)
 {
 	va_list argptr;
 	va_start(argptr, fmt);
@@ -188,7 +188,7 @@ Com_Printf(char *fmt, ...)
  * A Com_Printf that only shows up if the "developer" cvar is set
  */
 void
-Com_DPrintf(char *fmt, ...)
+Com_DPrintf(const char *fmt, ...)
 {
 	va_list argptr;
 	va_start(argptr, fmt);
@@ -201,7 +201,7 @@ Com_DPrintf(char *fmt, ...)
  * cvars is set
  */
 void
-Com_MDPrintf(char *fmt, ...)
+Com_MDPrintf(const char *fmt, ...)
 {
 	va_list argptr;
 	char msg[MAXPRINTMSG];
@@ -223,7 +223,7 @@ Com_MDPrintf(char *fmt, ...)
  * do the apropriate things.
  */
 void
-Com_Error(int code, char *fmt, ...)
+Com_Error(int code, const char *fmt, ...)
 {
 	va_list argptr;
 	static char msg[MAXPRINTMSG];

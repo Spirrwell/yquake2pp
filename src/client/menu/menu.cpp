@@ -335,7 +335,7 @@ Default_MenuKey(menuframework_s *m, int key)
     {
         menucommon_s *item;
 
-        if ((item = Menu_ItemAtCursor(m)) != 0)
+        if ((item = (menucommon_s*)Menu_ItemAtCursor(m)) != 0)
         {
             if (item->type == MTYPE_FIELD)
             {
@@ -2480,7 +2480,7 @@ LoadGame_MenuKey(int key)
     case K_BACKSPACE:
     case K_DEL:
     case K_KP_DEL:
-		if ((item = Menu_ItemAtCursor(m)) != NULL)
+		if ((item = (menucommon_s*)Menu_ItemAtCursor(m)) != NULL)
 		{
 			if (item->type == MTYPE_ACTION)
 			{
@@ -2632,7 +2632,7 @@ SaveGame_MenuKey(int key)
     case K_BACKSPACE:
     case K_DEL:
     case K_KP_DEL:
-		if ((item = Menu_ItemAtCursor(m)) != NULL)
+		if ((item = (menucommon_s*)Menu_ItemAtCursor(m)) != NULL)
 		{
 			if (item->type == MTYPE_ACTION)
 			{
@@ -3059,7 +3059,7 @@ StartServer_MenuInit(void)
             Com_Error(ERR_DROP, "no maps in maps.lst\n");
         }
 
-        mapnames = malloc(sizeof(char *) * (nummaps + 1));
+        mapnames = (char**)malloc(sizeof(char *) * (nummaps + 1));
 
         YQ2_COM_CHECK_OOM(mapnames, "malloc(sizeof(char *) * (nummaps + 1))", sizeof(char *) * (nummaps + 1))
 
@@ -3085,7 +3085,7 @@ StartServer_MenuInit(void)
             strcpy(longname, COM_Parse(&s));
             Com_sprintf(scratch, sizeof(scratch), "%s\n%s", longname, shortname);
 
-            mapnames[i] = malloc(strlen(scratch) + 1);
+            mapnames[i] = (char*)malloc(strlen(scratch) + 1);
             YQ2_COM_CHECK_OOM(mapnames, "malloc()", strlen(scratch)+1)
 
             strcpy(mapnames[i], scratch);
@@ -4164,7 +4164,7 @@ PlayerConfig_ScanDirectories(void)
 			continue;
 		}
 
-		skinnames = malloc(sizeof(char *) * (nskins + 1));
+		skinnames = (char**)malloc(sizeof(char *) * (nskins + 1));
 		YQ2_COM_CHECK_OOM(skinnames, "malloc()", sizeof(char *) * (nskins + 1))
 
 		memset(skinnames, 0, sizeof(char *) * (nskins + 1));

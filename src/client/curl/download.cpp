@@ -82,12 +82,12 @@ static size_t CL_HTTP_Recv(void *ptr, size_t size, size_t nmemb, void *stream)
 		}
 
 		dl->fileSize = ceil(length) + 1;
-		dl->tempBuffer = malloc(dl->fileSize);
+		dl->tempBuffer = (char*)malloc(dl->fileSize);
 	}
 	else if (dl->position + bytes >= dl->fileSize)
 	{
 		dl->fileSize *= 2;
-		char *tempBuffer = realloc(dl->tempBuffer, dl->fileSize);
+		char *tempBuffer = (char*)realloc(dl->tempBuffer, dl->fileSize);
 		if (!tempBuffer) {
 			free(dl->tempBuffer);
 			dl->tempBuffer = 0;
@@ -278,7 +278,7 @@ static void CL_StartHTTPDownload (dlqueue_t *entry, dlhandle_t *dl)
 
 	if ((ret = qcurl_multi_add_handle(multi, dl->curl)) != CURLM_OK)
 	{
-		Com_Printf("HTTP download: cURL error - %s\n", qcurl_easy_strerror(ret));
+		Com_Printf("HTTP download: cURL error - %s\n", qcurl_easy_strerror((CURLcode)ret));
 		CL_RemoveFromQueue(entry);
 
 		return;
@@ -593,6 +593,7 @@ static void CL_FinishHTTPDownload(void)
 		{
 			case CURLE_HTTP_RETURNED_ERROR:
 			case CURLE_OK:
+			{
 				qcurl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &responseCode);
 
 				if (responseCode == 404)
@@ -646,11 +647,12 @@ static void CL_FinishHTTPDownload(void)
 					break;
 				}
 
-
+			}
 			// Everything that's not 200 and 404 is fatal, fall through.
 			case CURLE_COULDNT_RESOLVE_HOST:
 			case CURLE_COULDNT_CONNECT:
 			case CURLE_COULDNT_RESOLVE_PROXY:
+			{
 				Com_Printf("HTTP download: %s - Server broken, aborting\n", dl->queueEntry->quakePath);
 
 				// The download failed. Reset pak downloading state...
@@ -689,7 +691,7 @@ static void CL_FinishHTTPDownload(void)
 				dl->queueEntry = NULL;
 
 				break;
-
+			}
 			default:
 				Com_Printf ("HTTP download: cURL error - %s\n", qcurl_easy_strerror(result));
 
@@ -1067,7 +1069,7 @@ qboolean CL_QueueHTTPDownload(const char *quakePath, qboolean gamedirForFilelist
 		}
 	}
 
-	q->next = malloc(sizeof(*q));
+	q->next = (dlqueue_s*)malloc(sizeof(*q));
 
 	YQ2_COM_CHECK_OOM(q->next, "malloc(sizeof(*q))", sizeof(*q))
 
@@ -1176,7 +1178,7 @@ void CL_RunHTTPDownloads(void)
 	// Somethings gone very wrong.
 	if (ret != CURLM_OK)
 	{
-		Com_Printf("HTTP download: cURL error - %s\n", qcurl_easy_strerror(ret));
+		Com_Printf("HTTP download: cURL error - %s\n", qcurl_easy_strerror((CURLcode)ret));
 		CL_CancelHTTPDownloads(true);
 	}
 

@@ -34,7 +34,7 @@ GL3_LoadSP2(gl3model_t *mod, void *buffer, int modfilelen)
 
 	sprin = (dsprite_t *)buffer;
 	mod->extradata = Hunk_Begin(modfilelen);
-	sprout = Hunk_Alloc(modfilelen);
+	sprout = (dsprite_t*)Hunk_Alloc(modfilelen);
 
 	sprout->ident = LittleLong(sprin->ident);
 	sprout->version = LittleLong(sprin->version);

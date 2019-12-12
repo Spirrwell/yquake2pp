@@ -206,7 +206,7 @@ SV_GameMap_f(void)
 			/* clear all the client inuse flags before saving so that
 			   when the level is re-entered, the clients will spawn
 			   at spawn points instead of occupying body shells */
-			savedInuse = malloc(maxclients->value * sizeof(qboolean));
+			savedInuse = (qboolean*)malloc(maxclients->value * sizeof(qboolean));
 
 			YQ2_COM_CHECK_OOM(savedInuse, "malloc()", maxclients->value * sizeof(qboolean))
 

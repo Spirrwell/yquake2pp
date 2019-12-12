@@ -105,10 +105,10 @@ struct edict_s
 typedef struct
 {
 	/* special messages */
-	void (*bprintf)(int printlevel, char *fmt, ...);
-	void (*dprintf)(char *fmt, ...);
-	void (*cprintf)(edict_t *ent, int printlevel, char *fmt, ...);
-	void (*centerprintf)(edict_t *ent, char *fmt, ...);
+	void (*bprintf)(int printlevel, const char *fmt, ...);
+	void (*dprintf)(const char *fmt, ...);
+	void (*cprintf)(edict_t *ent, int printlevel, const char *fmt, ...);
+	void (*centerprintf)(edict_t *ent, const char *fmt, ...);
 	void (*sound)(edict_t *ent, int channel, int soundindex, float volume,
 			float attenuation, float timeofs);
 	void (*positioned_sound)(vec3_t origin, edict_t *ent, int channel,
@@ -120,7 +120,7 @@ typedef struct
 	   they connect, and changes are sent to all connected clients. */
 	void (*configstring)(int num, char *string);
 
-	void (*error)(char *fmt, ...);
+	void (*error)(const char *fmt, ...);
 
 	/* the *index functions create configstrings
 	   and some internal server state */
@@ -195,20 +195,20 @@ typedef struct
 	void (*Shutdown)(void);
 
 	/* each new level entered will cause a call to SpawnEntities */
-	void (*SpawnEntities)(char *mapname, char *entstring, char *spawnpoint);
+	void (*SpawnEntities)(const char *mapname, char *entstring, const char *spawnpoint);
 
 	/* Read/Write Game is for storing persistant cross level information
 	   about the world state and the clients.
 	   WriteGame is called every time a level is exited.
 	   ReadGame is called on a loadgame. */
-	void (*WriteGame)(char *filename, qboolean autosave);
-	void (*ReadGame)(char *filename);
+	void (*WriteGame)(const char *filename, qboolean autosave);
+	void (*ReadGame)(const char *filename);
 
 	/* ReadLevel is called after the default
 	   map information has been loaded with
 	   SpawnEntities */
-	void (*WriteLevel)(char *filename);
-	void (*ReadLevel)(char *filename);
+	void (*WriteLevel)(const char *filename);
+	void (*ReadLevel)(const char *filename);
 
 	qboolean (*ClientConnect)(edict_t *ent, char *userinfo);
 	void (*ClientBegin)(edict_t *ent);

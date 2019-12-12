@@ -140,7 +140,7 @@ CopyString(char *in)
 {
 	char *out;
 
-	out = Z_Malloc((int)strlen(in) + 1);
+	out = (char*)Z_Malloc((int)strlen(in) + 1);
 	strcpy(out, in);
 	return out;
 }

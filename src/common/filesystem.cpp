@@ -46,7 +46,7 @@ typedef struct
 	char name[MAX_QPATH];
 	fsMode_t mode;
 	FILE *file;           /* Only one will be used. */
-	unzFile *zip;        /* (file or zip) */
+	unzFile zip;        /* (file or zip) */
 } fsHandle_t;
 
 typedef struct fsLink_s
@@ -69,7 +69,7 @@ typedef struct
 	char name[MAX_OSPATH];
 	int numFiles;
 	FILE *pak;
-	unzFile *pk3;
+	unzFile pk3;
 	qboolean isProtectedPak;
 	fsPackFile_t *files;
 } fsPack_t;
@@ -198,7 +198,7 @@ static voidpf ZCALLBACK fopen_file_func_utf(voidpf opaque, const char *filename,
 void
 Com_FilePath(const char *path, char *dst, int dstSize)
 {
-	char *pos; /* Position of the last '/'. */
+	const char *pos; /* Position of the last '/'. */
 
 	if ((pos = strrchr(path, '/')) != NULL)
 	{
@@ -664,7 +664,7 @@ FS_LoadFile(char *path, void **buffer)
 		return size;
 	}
 
-	buf = Z_Malloc(size);
+	buf = (byte*)Z_Malloc(size);
 	*buffer = buf;
 
 	FS_Read(buf, size, f);
@@ -729,7 +729,7 @@ FS_LoadPAK(const char *packPath)
 				packPath, numFiles);
 	}
 
-	files = Z_Malloc(numFiles * sizeof(fsPackFile_t));
+	files = (fsPackFile_t*)Z_Malloc(numFiles * sizeof(fsPackFile_t));
 
 	fseek(handle, header.dirofs, SEEK_SET);
 	fread(info, 1, header.dirlen, handle);
@@ -742,7 +742,7 @@ FS_LoadPAK(const char *packPath)
 		files[i].size = LittleLong(info[i].filelen);
 	}
 
-	pack = Z_Malloc(sizeof(fsPack_t));
+	pack = (fsPack_t*)Z_Malloc(sizeof(fsPack_t));
 	Q_strlcpy(pack->name, packPath, sizeof(pack->name));
 	pack->pak = handle;
 	pack->pk3 = NULL;
@@ -769,7 +769,7 @@ FS_LoadPK3(const char *packPath)
 	int status; /* Error indicator. */
 	fsPackFile_t *files; /* List of files in PK3. */
 	fsPack_t *pack; /* PK3 file. */
-	unzFile *handle; /* Zip file handle. */
+	unzFile handle; /* Zip file handle. */
 	unz_file_info info; /* Zip file info. */
 	unz_global_info global; /* Zip file global info. */
 
@@ -799,7 +799,7 @@ FS_LoadPK3(const char *packPath)
 				packPath, numFiles);
 	}
 
-	files = Z_Malloc(numFiles * sizeof(fsPackFile_t));
+	files = (fsPackFile_t*)Z_Malloc(numFiles * sizeof(fsPackFile_t));
 
 	/* Parse the directory. */
 	status = unzGoToFirstFile(handle);
@@ -816,7 +816,7 @@ FS_LoadPK3(const char *packPath)
 		status = unzGoToNextFile(handle);
 	}
 
-	pack = Z_Malloc(sizeof(fsPack_t));
+	pack = (fsPack_t*)Z_Malloc(sizeof(fsPack_t));
 	Q_strlcpy(pack->name, packPath, sizeof(pack->name));
 	pack->pak = NULL;
 	pack->pk3 = handle;
@@ -947,7 +947,7 @@ FS_Link_f(void)
 	}
 
 	/* Create a new link. */
-	l = Z_Malloc(sizeof(*l));
+	l = (fsLink_t*)Z_Malloc(sizeof(*l));
 	l->next = fs_links;
 	fs_links = l;
 	l->from = CopyString(Cmd_Argv(1));
@@ -995,7 +995,7 @@ FS_ListFiles(char *findname, int *numfiles,
 	*numfiles = nfiles;
 
 	/* Allocate the list. */
-	list = calloc(nfiles, sizeof(char *));
+	list = (char**)calloc(nfiles, sizeof(char *));
 	YQ2_COM_CHECK_OOM(list, "calloc()", (size_t)nfiles*sizeof(char*))
 
 	/* Fill the list. */
@@ -1098,7 +1098,7 @@ FS_ListFiles2(char *findname, int *numfiles,
 	char path[MAX_OSPATH]; /* Temporary path. */
 
 	nfiles = 0;
-	list = malloc(sizeof(char *));
+	list = (char**)malloc(sizeof(char *));
 	YQ2_COM_CHECK_OOM(list, "malloc()", sizeof(char*))
 
 	for (search = fs_searchPaths; search != NULL; search = search->next)
@@ -1125,7 +1125,7 @@ FS_ListFiles2(char *findname, int *numfiles,
 			}
 
 			nfiles += j;
-			list = realloc(list, nfiles * sizeof(char *));
+			list = (char**)realloc(list, nfiles * sizeof(char *));
 			YQ2_COM_CHECK_OOM(list, "realloc()", (size_t)nfiles*sizeof(char*))
 
 			for (i = 0, j = nfiles - j; i < search->pack->numFiles; i++)
@@ -1150,7 +1150,7 @@ FS_ListFiles2(char *findname, int *numfiles,
 		{
 			tmpnfiles--;
 			nfiles += tmpnfiles;
-			list = realloc(list, nfiles * sizeof(char *));
+			list = (char**)realloc(list, nfiles * sizeof(char *));
 			YQ2_COM_CHECK_OOM(list, "2nd realloc()", (size_t)nfiles*sizeof(char*))
 
 			for (i = 0, j = nfiles - tmpnfiles; i < tmpnfiles; i++, j++)
@@ -1187,7 +1187,7 @@ FS_ListFiles2(char *findname, int *numfiles,
 	if (tmpnfiles > 0)
 	{
 		nfiles -= tmpnfiles;
-		tmplist = malloc(nfiles * sizeof(char *));
+		tmplist = (char**)malloc(nfiles * sizeof(char *));
 		YQ2_COM_CHECK_OOM(tmplist, "malloc()", (size_t)nfiles*sizeof(char*))
 
 		for (i = 0, j = 0; i < nfiles + tmpnfiles; i++)
@@ -1206,7 +1206,7 @@ FS_ListFiles2(char *findname, int *numfiles,
 	if (nfiles > 0)
 	{
 		nfiles++;
-		list = realloc(list, nfiles * sizeof(char *));
+		list = (char**)realloc(list, nfiles * sizeof(char *));
 		YQ2_COM_CHECK_OOM(list, "3rd realloc()", (size_t)nfiles*sizeof(char*))
 		list[nfiles - 1] = NULL;
 	}
@@ -1364,7 +1364,7 @@ FS_AddPAKFromGamedir(const char *pak)
 		else
 		{
 			// Add it.
-			fsSearchPath_t *search = Z_Malloc(sizeof(fsSearchPath_t));
+			fsSearchPath_t *search = (fsSearchPath_t*)Z_Malloc(sizeof(fsSearchPath_t));
 			search->pack = pakfile;
 			search->next = fs_searchPaths;
 			fs_searchPaths = search;
@@ -1428,7 +1428,7 @@ FS_AddDirToSearchPath(char *dir, qboolean create) {
 	}
 
 	// Add the directory itself.
-	search = Z_Malloc(sizeof(fsSearchPath_t));
+	search = (fsSearchPath_t*)Z_Malloc(sizeof(fsSearchPath_t));
 	Q_strlcpy(search->path, dir, sizeof(search->path));
 	search->next = fs_searchPaths;
 	fs_searchPaths = search;
@@ -1467,7 +1467,7 @@ FS_AddDirToSearchPath(char *dir, qboolean create) {
 				continue;
 			}
 
-			search = Z_Malloc(sizeof(fsSearchPath_t));
+			search = (fsSearchPath_t*)Z_Malloc(sizeof(fsSearchPath_t));
 			search->pack = pack;
 			search->next = fs_searchPaths;
 			fs_searchPaths = search;
@@ -1513,7 +1513,7 @@ FS_AddDirToSearchPath(char *dir, qboolean create) {
 
 			pack->isProtectedPak = false;
 
-			search = Z_Malloc(sizeof(fsSearchPath_t));
+			search = (fsSearchPath_t*)Z_Malloc(sizeof(fsSearchPath_t));
 			search->pack = pack;
 			search->next = fs_searchPaths;
 			fs_searchPaths = search;
@@ -1678,7 +1678,7 @@ void FS_AddDirToRawPath (const char *dir, qboolean create) {
 	fsRawPath_t *search;
 
 	// Add the directory
-	search = Z_Malloc(sizeof(fsRawPath_t));
+	search = (fsRawPath_t*)Z_Malloc(sizeof(fsRawPath_t));
 	Q_strlcpy(search->path, dir, sizeof(search->path));
 	search->create = create;
 	search->next = fs_rawPath;

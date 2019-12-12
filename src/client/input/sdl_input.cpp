@@ -62,15 +62,8 @@ int sys_frame_time;
 qboolean joy_altselector_pressed = false;
 
 // Console Variables
-cvar_t *vid_fullscreen;
-cvar_t *freelook;
-cvar_t *lookstrafe;
-cvar_t *m_forward;
-cvar_t *m_pitch;
-cvar_t *m_side;
+static cvar_t *vid_fullscreen;
 cvar_t *m_up;
-cvar_t *m_yaw;
-cvar_t *sensitivity;
 
 static cvar_t *exponential_speedup;
 static cvar_t *in_grab;

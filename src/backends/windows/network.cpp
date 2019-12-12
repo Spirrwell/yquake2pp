@@ -193,7 +193,7 @@ NET_CompareAdr(netadr_t a, netadr_t b)
 
 	if (a.type == NA_LOOPBACK)
 	{
-		return TRUE;
+		return true;
 	}
 
 	if (a.type == NA_IP)
@@ -240,7 +240,7 @@ NET_CompareBaseAdr(netadr_t a, netadr_t b)
 
 	if (a.type == NA_LOOPBACK)
 	{
-		return TRUE;
+		return true;
 	}
 
 	if (a.type == NA_IP)
@@ -756,7 +756,7 @@ NET_SendPacket(netsrc_t sock, int length, void *data, netadr_t to)
 		}
 	}
 
-	ret = sendto(net_socket, data, length, 0,
+	ret = sendto(net_socket, (const char*)data, length, 0,
 			(struct sockaddr *)&addr, addr_size);
 
 	if (ret == -1)
@@ -803,7 +803,8 @@ NET_SendPacket(netsrc_t sock, int length, void *data, netadr_t to)
 int
 NET_IPSocket(char *net_interface, int port, netsrc_t type, int family)
 {
-	char Buf[BUFSIZ], *Host, *Service;
+	char Buf[BUFSIZ], *Service;
+	const char *Host;
 	int newsocket, Error;
 	struct sockaddr_storage ss;
 	struct addrinfo hints, *res, *ai;
@@ -820,7 +821,7 @@ NET_IPSocket(char *net_interface, int port, netsrc_t type, int family)
 	hints.ai_flags = AI_PASSIVE;
 
 	if (!net_interface || !net_interface[0] ||
-		!stricmp(net_interface, "localhost"))
+		!_stricmp(net_interface, "localhost"))
 	{
 		Host = (family == AF_INET6) ? "::/128" : "0.0.0.0";
 	}
@@ -1091,7 +1092,7 @@ NET_IPXSocket(int port)
 		address.sa_socket = htons((short)port);
 	}
 
-	if (bind(newsocket, (void *)&address, sizeof(address)) == -1)
+	if (bind(newsocket, reinterpret_cast< sockaddr* >( &address ), sizeof(address)) == -1)
 	{
 		Com_Printf("WARNING: IPX_Socket: bind: %s\n", NET_ErrorString());
 		closesocket(newsocket);
@@ -1256,8 +1257,8 @@ NET_Sleep(int msec)
 
 	timeout.tv_sec = msec / 1000;
 	timeout.tv_usec = (msec % 1000) * 1000;
-	i = max(ip_sockets[NS_SERVER], ip6_sockets[NS_SERVER]);
-	i = max(i, ipx_sockets[NS_SERVER]);
+	i = YQ2_MAX(ip_sockets[NS_SERVER], ip6_sockets[NS_SERVER]);
+	i = YQ2_MAX(i, ipx_sockets[NS_SERVER]);
 	select(i + 1, &fdset, NULL, NULL, &timeout);
 }
 

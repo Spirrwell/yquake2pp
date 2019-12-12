@@ -904,7 +904,7 @@ Swap_Init(void)
  * need to have varargs versions of all text functions.
  */
 char *
-va(char *format, ...)
+va(const char *format, ...)
 {
 	va_list argptr;
 	static char string[1024];
@@ -1034,7 +1034,11 @@ Com_PageInMemory(byte *buffer, int size)
 int
 Q_stricmp(const char *s1, const char *s2)
 {
+#if defined (_MSC_VER)
+	return _stricmp(s1, s2);
+#else
 	return strcasecmp(s1, s2);
+#endif
 }
 
 int
@@ -1082,7 +1086,7 @@ Q_strcasecmp(char *s1, char *s2)
 }
 
 void
-Com_sprintf(char *dest, int size, char *fmt, ...)
+Com_sprintf(char *dest, int size, const char *fmt, ...)
 {
 	int len;
 	va_list argptr;

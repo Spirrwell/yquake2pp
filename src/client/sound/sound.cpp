@@ -240,7 +240,7 @@ S_AliasName(char *aliasname, char *truename)
 	char *s;
 	int i;
 
-	s = Z_Malloc(MAX_QPATH);
+	s = (char*)Z_Malloc(MAX_QPATH);
 	strcpy(s, truename);
 
 	/* find a free sfx */

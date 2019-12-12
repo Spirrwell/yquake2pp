@@ -248,12 +248,12 @@ GetWindowSize(int* w, int* h)
 static void
 InitDisplayIndices()
 {
-	displayindices = malloc((num_displays + 1) * sizeof(char *));
+	displayindices = (char**)malloc((num_displays + 1) * sizeof(char *));
 
 	for ( int i = 0; i < num_displays; i++ )
 	{
 		/* There are a maximum of 10 digits in 32 bit int + 1 for the NULL terminator. */
-		displayindices[ i ] = malloc(11 * sizeof( char ));
+		displayindices[ i ] = (char*)malloc(11 * sizeof( char ));
 		YQ2_COM_CHECK_OOM(displayindices[i], "malloc()", 11 * sizeof( char ))
 
 		snprintf( displayindices[ i ], 11, "%d", i );

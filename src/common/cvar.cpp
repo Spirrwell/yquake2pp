@@ -32,7 +32,7 @@ cvar_t *cvar_vars;
 typedef struct
 {
 	char *old;
-	char *new;
+	char *rep;
 } replacement_t;
 
 /* An ugly hack to rewrite CVARs loaded from config.cfg */
@@ -118,9 +118,9 @@ Cvar_FindVar(const char *var_name)
 	{
 		if (!strcmp(var_name, replacements[i].old))
 		{
-			Com_Printf("cvar %s ist deprecated, use %s instead\n", replacements[i].old, replacements[i].new);
+			Com_Printf("cvar %s ist deprecated, use %s instead\n", replacements[i].old, replacements[i].rep);
 
-			var_name = replacements[i].new;
+			var_name = replacements[i].rep;
 		}
 	}
 
@@ -245,7 +245,7 @@ Cvar_Get(char *var_name, char *var_value, int flags)
 		var_value = "";
 	}
 
-	var = Z_Malloc(sizeof(*var));
+	var = (cvar_t*)Z_Malloc(sizeof(*var));
 	var->name = CopyString(var_name);
 	var->string = CopyString(var_value);
 	var->default_string = CopyString(var_value);
@@ -522,7 +522,7 @@ Cvar_Set_f(void)
 	{
 		if (!strcmp(firstarg, replacements[i].old))
 		{
-			firstarg = replacements[i].new;
+			firstarg = replacements[i].rep;
 		}
 	}
 

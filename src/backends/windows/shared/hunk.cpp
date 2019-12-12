@@ -41,7 +41,7 @@ Hunk_Begin(int maxsize)
 	hunkmaxsize = maxsize + sizeof(size_t) + 32;
 	cursize = 0;
 
-	membase = VirtualAlloc(NULL, hunkmaxsize, MEM_RESERVE, PAGE_NOACCESS);
+	membase = (byte*)VirtualAlloc(NULL, hunkmaxsize, MEM_RESERVE, PAGE_NOACCESS);
 
 	if (!membase)
 	{

@@ -153,7 +153,7 @@ R_SubdividePolygon(int numverts, float *verts, msurface_t *warpface)
 	}
 
 	/* add a point in the center to help keep warp valid */
-	poly = Hunk_Alloc(sizeof(glpoly_t) + ((numverts - 4) + 2) * sizeof(gl3_3D_vtx_t));
+	poly = (glpoly_t*)Hunk_Alloc(sizeof(glpoly_t) + ((numverts - 4) + 2) * sizeof(gl3_3D_vtx_t));
 	poly->next = warpface->polys;
 	warpface->polys = poly;
 	poly->numverts = numverts + 2;

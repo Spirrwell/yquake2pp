@@ -935,7 +935,7 @@ GL3_DrawParticles(void)
 		} part_vtx;
 		assert(sizeof(part_vtx)==9*sizeof(float)); // remember to update GL3_SurfInit() if this changes!
 
-		part_vtx buf[numParticles];
+		part_vtx *buf = (part_vtx*)malloc(sizeof(part_vtx) * numParticles);
 
 		// TODO: viewOrg could be in UBO
 		vec3_t viewOrg;
@@ -972,6 +972,8 @@ GL3_DrawParticles(void)
 		glDisable(GL_BLEND);
 		glDepthMask(GL_TRUE);
 		glDisable(GL_PROGRAM_POINT_SIZE);
+
+		free(buf);
 	}
 }
 
@@ -1834,49 +1836,52 @@ GL3_SetPalette(const unsigned char *palette)
 	glClearColor(1, 0, 0.5, 0.5);
 }
 
-Q2_DLL_EXPORTED refexport_t
-GetRefAPI(refimport_t imp)
+extern "C"
 {
-	refexport_t re = {0};
+	Q2_DLL_EXPORTED refexport_t
+	GetRefAPI(refimport_t imp)
+	{
+		refexport_t re = {0};
 
-	ri = imp;
+		ri = imp;
 
-	re.api_version = API_VERSION;
+		re.api_version = API_VERSION;
 
-	re.Init = GL3_Init;
-	re.Shutdown = GL3_Shutdown;
-	re.PrepareForWindow = GL3_PrepareForWindow;
-	re.InitContext = GL3_InitContext;
-	re.ShutdownContext = GL3_ShutdownContext;
-	re.IsVSyncActive = GL3_IsVsyncActive;
+		re.Init = GL3_Init;
+		re.Shutdown = GL3_Shutdown;
+		re.PrepareForWindow = GL3_PrepareForWindow;
+		re.InitContext = GL3_InitContext;
+		re.ShutdownContext = GL3_ShutdownContext;
+		re.IsVSyncActive = GL3_IsVsyncActive;
 
-	re.BeginRegistration = GL3_BeginRegistration;
-	re.RegisterModel = GL3_RegisterModel;
-	re.RegisterSkin = GL3_RegisterSkin;
+		re.BeginRegistration = GL3_BeginRegistration;
+		re.RegisterModel = GL3_RegisterModel;
+		re.RegisterSkin = GL3_RegisterSkin;
 
-	re.SetSky = GL3_SetSky;
-	re.EndRegistration = GL3_EndRegistration;
+		re.SetSky = GL3_SetSky;
+		re.EndRegistration = GL3_EndRegistration;
 
-	re.RenderFrame = GL3_RenderFrame;
+		re.RenderFrame = GL3_RenderFrame;
 
-	re.DrawFindPic = GL3_Draw_FindPic;
-	re.DrawGetPicSize = GL3_Draw_GetPicSize;
+		re.DrawFindPic = GL3_Draw_FindPic;
+		re.DrawGetPicSize = GL3_Draw_GetPicSize;
 
-	re.DrawPicScaled = GL3_Draw_PicScaled;
-	re.DrawStretchPic = GL3_Draw_StretchPic;
+		re.DrawPicScaled = GL3_Draw_PicScaled;
+		re.DrawStretchPic = GL3_Draw_StretchPic;
 
-	re.DrawCharScaled = GL3_Draw_CharScaled;
-	re.DrawTileClear = GL3_Draw_TileClear;
-	re.DrawFill = GL3_Draw_Fill;
-	re.DrawFadeScreen = GL3_Draw_FadeScreen;
+		re.DrawCharScaled = GL3_Draw_CharScaled;
+		re.DrawTileClear = GL3_Draw_TileClear;
+		re.DrawFill = GL3_Draw_Fill;
+		re.DrawFadeScreen = GL3_Draw_FadeScreen;
 
-	re.DrawStretchRaw = GL3_Draw_StretchRaw;
-	re.SetPalette = GL3_SetPalette;
+		re.DrawStretchRaw = GL3_Draw_StretchRaw;
+		re.SetPalette = GL3_SetPalette;
 
-	re.BeginFrame = GL3_BeginFrame;
-	re.EndFrame = GL3_EndFrame;
+		re.BeginFrame = GL3_BeginFrame;
+		re.EndFrame = GL3_EndFrame;
 
-	return re;
+		return re;
+	}
 }
 
 void R_Printf(int level, const char* msg, ...)
@@ -1892,7 +1897,7 @@ void R_Printf(int level, const char* msg, ...)
  * (shared.c, rand.c, flash.c, mem.c/hunk.c) can link
  */
 void
-Sys_Error(char *error, ...)
+Sys_Error(const char *error, ...)
 {
 	va_list argptr;
 	char text[4096]; // MAXPRINTMSG == 4096
@@ -1905,7 +1910,7 @@ Sys_Error(char *error, ...)
 }
 
 void
-Com_Printf(char *msg, ...)
+Com_Printf(const char *msg, ...)
 {
 	va_list argptr;
 	va_start(argptr, msg);

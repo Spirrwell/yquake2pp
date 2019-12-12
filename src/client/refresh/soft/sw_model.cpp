@@ -277,8 +277,8 @@ Mod_LoadLighting (lump_t *l)
 		return;
 	}
 	size = l->filelen/3;
-	loadmodel->lightdata = Hunk_Alloc(size);
-	in = (void *)(mod_base + l->fileofs);
+	loadmodel->lightdata = (byte*)Hunk_Alloc(size);
+	in = (byte *)(mod_base + l->fileofs);
 	for (i=0 ; i<size ; i++, in+=3)
 	{
 		if (in[0] > in[1] && in[0] > in[2])
@@ -333,7 +333,7 @@ Mod_LoadVisibility (lump_t *l)
 		loadmodel->vis = NULL;
 		return;
 	}
-	loadmodel->vis = Hunk_Alloc(l->filelen);
+	loadmodel->vis = (dvis_t*)Hunk_Alloc(l->filelen);
 	memcpy (loadmodel->vis, mod_base + l->fileofs, l->filelen);
 
 	loadmodel->vis->numclusters = LittleLong (loadmodel->vis->numclusters);
@@ -357,7 +357,7 @@ Mod_LoadVertexes (lump_t *l)
 	mvertex_t	*out;
 	int			i, count;
 
-	in = (void *)(mod_base + l->fileofs);
+	in = (dvertex_t *)(mod_base + l->fileofs);
 
 	if (l->filelen % sizeof(*in))
 	{
@@ -366,7 +366,7 @@ Mod_LoadVertexes (lump_t *l)
 	}
 
 	count = l->filelen / sizeof(*in);
-	out = Hunk_Alloc((count+8)*sizeof(*out));		// extra for skybox
+	out = (mvertex_t*)Hunk_Alloc((count+8)*sizeof(*out));		// extra for skybox
 	/*
 	 * Fix for the problem where the games dumped core
 	 * when changing levels.
@@ -396,7 +396,7 @@ Mod_LoadSubmodels (lump_t *l)
 	dmodel_t	*out;
 	int			i, j, count;
 
-	in = (void *)(mod_base + l->fileofs);
+	in = (dmodel_t *)(mod_base + l->fileofs);
 
 	if (l->filelen % sizeof(*in))
 	{
@@ -405,7 +405,7 @@ Mod_LoadSubmodels (lump_t *l)
 	}
 
 	count = l->filelen / sizeof(*in);
-	out = Hunk_Alloc(count*sizeof(*out));
+	out = (dmodel_t*)Hunk_Alloc(count*sizeof(*out));
 
 	loadmodel->submodels = out;
 	loadmodel->numsubmodels = count;
@@ -436,7 +436,7 @@ Mod_LoadEdges (lump_t *l)
 	medge_t *out;
 	int 	i, count;
 
-	in = (void *)(mod_base + l->fileofs);
+	in = (dedge_t *)(mod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
 	{
 		ri.Sys_Error(ERR_DROP, "%s: funny lump size in %s",
@@ -444,7 +444,7 @@ Mod_LoadEdges (lump_t *l)
 	}
 
 	count = l->filelen / sizeof(*in);
-	out = Hunk_Alloc((count + 13) * sizeof(*out));	// extra for skybox
+	out = (medge_t*)Hunk_Alloc((count + 13) * sizeof(*out));	// extra for skybox
 
 	loadmodel->edges = out;
 	loadmodel->numedges = count;
@@ -469,7 +469,7 @@ Mod_LoadTexinfo (lump_t *l)
 	int 	i, count;
 	char	name[MAX_QPATH];
 
-	in = (void *)(mod_base + l->fileofs);
+	in = (texinfo_t *)(mod_base + l->fileofs);
 
 	if (l->filelen % sizeof(*in))
 	{
@@ -478,7 +478,7 @@ Mod_LoadTexinfo (lump_t *l)
 	}
 
 	count = l->filelen / sizeof(*in);
-	out = Hunk_Alloc((count+6)*sizeof(*out));	// extra for skybox
+	out = (mtexinfo_t*)Hunk_Alloc((count+6)*sizeof(*out));	// extra for skybox
 
 	loadmodel->texinfo = out;
 	loadmodel->numtexinfo = count;
@@ -604,7 +604,7 @@ Mod_LoadFaces (lump_t *l)
 	msurface_t 	*out;
 	int			i, count, surfnum;
 
-	in = (void *)(mod_base + l->fileofs);
+	in = (dface_t *)(mod_base + l->fileofs);
 
 	if (l->filelen % sizeof(*in))
 	{
@@ -613,7 +613,7 @@ Mod_LoadFaces (lump_t *l)
 	}
 
 	count = l->filelen / sizeof(*in);
-	out = Hunk_Alloc((count+6)*sizeof(*out));	// extra for skybox
+	out = (msurface_t*)Hunk_Alloc((count+6)*sizeof(*out));	// extra for skybox
 
 	loadmodel->surfaces = out;
 	loadmodel->numsurfaces = count;
@@ -717,7 +717,7 @@ Mod_LoadNodes (lump_t *l)
 	dnode_t		*in;
 	mnode_t 	*out;
 
-	in = (void *)(mod_base + l->fileofs);
+	in = (dnode_t *)(mod_base + l->fileofs);
 
 	if (l->filelen % sizeof(*in))
 	{
@@ -726,7 +726,7 @@ Mod_LoadNodes (lump_t *l)
 	}
 
 	count = l->filelen / sizeof(*in);
-	out = Hunk_Alloc(count*sizeof(*out));
+	out = (mnode_t*)Hunk_Alloc(count*sizeof(*out));
 
 	loadmodel->nodes = out;
 	loadmodel->numnodes = count;
@@ -773,7 +773,7 @@ Mod_LoadLeafs (lump_t *l)
 	mleaf_t 	*out;
 	int			i, j, count;
 
-	in = (void *)(mod_base + l->fileofs);
+	in = (dleaf_t *)(mod_base + l->fileofs);
 
 	if (l->filelen % sizeof(*in))
 	{
@@ -782,7 +782,7 @@ Mod_LoadLeafs (lump_t *l)
 	}
 
 	count = l->filelen / sizeof(*in);
-	out = Hunk_Alloc(count*sizeof(*out));
+	out = (mleaf_t*)Hunk_Alloc(count*sizeof(*out));
 
 	loadmodel->leafs = out;
 	loadmodel->numleafs = count;
@@ -827,7 +827,7 @@ Mod_LoadMarksurfaces (lump_t *l)
 	short		*in;
 	msurface_t **out;
 
-	in = (void *)(mod_base + l->fileofs);
+	in = (short *)(mod_base + l->fileofs);
 
 	if (l->filelen % sizeof(*in))
 	{
@@ -836,7 +836,7 @@ Mod_LoadMarksurfaces (lump_t *l)
 	}
 
 	count = l->filelen / sizeof(*in);
-	out = Hunk_Alloc(count*sizeof(*out));
+	out = (msurface_t**)Hunk_Alloc(count*sizeof(*out));
 
 	loadmodel->marksurfaces = out;
 	loadmodel->nummarksurfaces = count;
@@ -864,7 +864,7 @@ Mod_LoadSurfedges (lump_t *l)
 	int		i, count;
 	int		*in, *out;
 
-	in = (void *)(mod_base + l->fileofs);
+	in = (int *)(mod_base + l->fileofs);
 
 	if (l->filelen % sizeof(*in))
 	{
@@ -873,7 +873,7 @@ Mod_LoadSurfedges (lump_t *l)
 	}
 
 	count = l->filelen / sizeof(*in);
-	out = Hunk_Alloc((count+24)*sizeof(*out));	// extra for skybox
+	out = (int*)Hunk_Alloc((count+24)*sizeof(*out));	// extra for skybox
 
 	loadmodel->surfedges = out;
 	loadmodel->numsurfedges = count;
@@ -895,7 +895,7 @@ Mod_LoadPlanes (lump_t *l)
 	dplane_t 	*in;
 	int			count;
 
-	in = (void *)(mod_base + l->fileofs);
+	in = (dplane_t *)(mod_base + l->fileofs);
 
 	if (l->filelen % sizeof(*in))
 	{
@@ -904,7 +904,7 @@ Mod_LoadPlanes (lump_t *l)
 	}
 
 	count = l->filelen / sizeof(*in);
-	out = Hunk_Alloc((count+6)*sizeof(*out));		// extra for skybox
+	out = (mplane_t*)Hunk_Alloc((count+6)*sizeof(*out));		// extra for skybox
 
 	loadmodel->planes = out;
 	loadmodel->numplanes = count;
@@ -1097,7 +1097,7 @@ Mod_LoadAliasModel(model_t *mod, void *buffer, int modfilelen)
 	}
 
 	mod->extradata = Hunk_Begin(modfilelen);
-	pheader = Hunk_Alloc(ofs_end);
+	pheader = (dmdl_t*)Hunk_Alloc(ofs_end);
 
 	// byte swap the header fields and sanity check
 	for (i=0 ; i<sizeof(dmdl_t)/4 ; i++)
@@ -1233,7 +1233,7 @@ Mod_LoadSpriteModel(model_t *mod, void *buffer, int modfilelen)
 
 	sprin = (dsprite_t *)buffer;
 	mod->extradata = Hunk_Begin(modfilelen);
-	sprout = Hunk_Alloc(modfilelen);
+	sprout = (dsprite_t*)Hunk_Alloc(modfilelen);
 
 	sprout->ident = LittleLong (sprin->ident);
 	sprout->version = LittleLong (sprin->version);

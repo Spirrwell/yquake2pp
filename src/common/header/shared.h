@@ -46,7 +46,11 @@
  #undef false
 #endif
 
+#if defined (__cplusplus)
+typedef bool qboolean;
+#else
 typedef enum {false, true}  qboolean;
+#endif
 typedef unsigned char byte;
 
 #ifndef NULL
@@ -234,7 +238,7 @@ void COM_DefaultExtension(char *path, const char *extension);
 char *COM_Parse(char **data_p);
 
 /* data is an in/out parm, returns a parsed out token */
-void Com_sprintf(char *dest, int size, char *fmt, ...);
+void Com_sprintf(char *dest, int size, const char *fmt, ...);
 
 void Com_PageInMemory(byte *buffer, int size);
 
@@ -267,7 +271,8 @@ float BigFloat(float l);
 float LittleFloat(float l);
 
 void Swap_Init(void);
-char *va(char *format, ...)  __attribute__ ((format (printf, 1, 2)));
+
+char *va(const char *format, ...);
 
 /* ============================================= */
 
@@ -323,8 +328,8 @@ char *Sys_FindNext(unsigned musthave, unsigned canthave);
 void Sys_FindClose(void);
 
 /* this is only here so the functions in shared source files can link */
-void Sys_Error(char *error, ...);
-void Com_Printf(char *msg, ...);
+void Sys_Error(const char *error, ...);
+void Com_Printf(const char *msg, ...);
 
 /*
  * ==========================================================

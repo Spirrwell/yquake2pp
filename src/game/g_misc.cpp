@@ -2346,7 +2346,7 @@ func_clock_format_countdown(edict_t *self)
 	if (size < CLOCK_MESSAGE_SIZE)
 	{
 		gi.TagFree (self->message);
-		self->message = gi.TagMalloc (CLOCK_MESSAGE_SIZE, TAG_LEVEL);
+		self->message = (char*)gi.TagMalloc (CLOCK_MESSAGE_SIZE, TAG_LEVEL);
 	}
 
 	if (self->style == 0)
@@ -2529,7 +2529,7 @@ SP_func_clock(edict_t *self)
 
 	func_clock_reset(self);
 
-	self->message = gi.TagMalloc(CLOCK_MESSAGE_SIZE, TAG_LEVEL);
+	self->message = (char*)gi.TagMalloc(CLOCK_MESSAGE_SIZE, TAG_LEVEL);
 
 	self->think = func_clock_think;
 

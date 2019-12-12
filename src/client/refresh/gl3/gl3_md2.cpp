@@ -54,7 +54,7 @@ GL3_LoadMD2(gl3model_t *mod, void *buffer, int modfilelen)
 				   modfilelen, ofs_end);
 
 	mod->extradata = Hunk_Begin(modfilelen);
-	pheader = Hunk_Alloc(ofs_end);
+	pheader = (dmdl_t*)Hunk_Alloc(ofs_end);
 
 	/* byte swap the header fields and sanity check */
 	for (i = 0; i < sizeof(dmdl_t) / 4; i++)
