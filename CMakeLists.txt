@@ -166,23 +166,23 @@ if ("${ARCH}" STREQUAL "x86_64")
 endif()
 
 set(Backends-Generic-Source
-	${BACKENDS_SRC_DIR}/generic/misc.c
+	${BACKENDS_SRC_DIR}/generic/misc.cpp
 	)
 
 set(Backends-Unix-Source
-	${BACKENDS_SRC_DIR}/unix/main.c
-	${BACKENDS_SRC_DIR}/unix/network.c
-	${BACKENDS_SRC_DIR}/unix/signalhandler.c
-	${BACKENDS_SRC_DIR}/unix/system.c
-	${BACKENDS_SRC_DIR}/unix/shared/hunk.c
+	${BACKENDS_SRC_DIR}/unix/main.cpp
+	${BACKENDS_SRC_DIR}/unix/network.cpp
+	${BACKENDS_SRC_DIR}/unix/signalhandler.cpp
+	${BACKENDS_SRC_DIR}/unix/system.cpp
+	${BACKENDS_SRC_DIR}/unix/shared/hunk.cpp
 	)
 
 set(Backends-Windows-Source
 	${BACKENDS_SRC_DIR}/windows/icon.rc
-	${BACKENDS_SRC_DIR}/windows/main.c
-	${BACKENDS_SRC_DIR}/windows/network.c
-	${BACKENDS_SRC_DIR}/windows/system.c
-	${BACKENDS_SRC_DIR}/windows/shared/hunk.c
+	${BACKENDS_SRC_DIR}/windows/main.cpp
+	${BACKENDS_SRC_DIR}/windows/network.cpp
+	${BACKENDS_SRC_DIR}/windows/system.cpp
+	${BACKENDS_SRC_DIR}/windows/shared/hunk.cpp
 	)
 
 set(Backends-Windows-Header
@@ -190,7 +190,7 @@ set(Backends-Windows-Header
 	)
 
 set(REF-Windows-Source
-	${BACKENDS_SRC_DIR}/windows/shared/hunk.c
+	${BACKENDS_SRC_DIR}/windows/shared/hunk.cpp
 	)
 
 set(REF-Unix-Source
@@ -207,54 +207,54 @@ else()
 endif()
 
 set(Game-Source
-	${COMMON_SRC_DIR}/shared/flash.c
-	${COMMON_SRC_DIR}/shared/rand.c
-	${COMMON_SRC_DIR}/shared/shared.c
-	${GAME_SRC_DIR}/g_ai.c
-	${GAME_SRC_DIR}/g_chase.c
-	${GAME_SRC_DIR}/g_cmds.c
-	${GAME_SRC_DIR}/g_combat.c
-	${GAME_SRC_DIR}/g_func.c
-	${GAME_SRC_DIR}/g_items.c
-	${GAME_SRC_DIR}/g_main.c
-	${GAME_SRC_DIR}/g_misc.c
-	${GAME_SRC_DIR}/g_monster.c
-	${GAME_SRC_DIR}/g_phys.c
-	${GAME_SRC_DIR}/g_spawn.c
-	${GAME_SRC_DIR}/g_svcmds.c
-	${GAME_SRC_DIR}/g_target.c
-	${GAME_SRC_DIR}/g_trigger.c
-	${GAME_SRC_DIR}/g_turret.c
-	${GAME_SRC_DIR}/g_utils.c
-	${GAME_SRC_DIR}/g_weapon.c
-	${GAME_SRC_DIR}/monster/berserker/berserker.c
-	${GAME_SRC_DIR}/monster/boss2/boss2.c
-	${GAME_SRC_DIR}/monster/boss3/boss3.c
-	${GAME_SRC_DIR}/monster/boss3/boss31.c
-	${GAME_SRC_DIR}/monster/boss3/boss32.c
-	${GAME_SRC_DIR}/monster/brain/brain.c
-	${GAME_SRC_DIR}/monster/chick/chick.c
-	${GAME_SRC_DIR}/monster/flipper/flipper.c
-	${GAME_SRC_DIR}/monster/float/float.c
-	${GAME_SRC_DIR}/monster/flyer/flyer.c
-	${GAME_SRC_DIR}/monster/gladiator/gladiator.c
-	${GAME_SRC_DIR}/monster/gunner/gunner.c
-	${GAME_SRC_DIR}/monster/hover/hover.c
-	${GAME_SRC_DIR}/monster/infantry/infantry.c
-	${GAME_SRC_DIR}/monster/insane/insane.c
-	${GAME_SRC_DIR}/monster/medic/medic.c
-	${GAME_SRC_DIR}/monster/misc/move.c
-	${GAME_SRC_DIR}/monster/mutant/mutant.c
-	${GAME_SRC_DIR}/monster/parasite/parasite.c
-	${GAME_SRC_DIR}/monster/soldier/soldier.c
-	${GAME_SRC_DIR}/monster/supertank/supertank.c
-	${GAME_SRC_DIR}/monster/tank/tank.c
-	${GAME_SRC_DIR}/player/client.c
-	${GAME_SRC_DIR}/player/hud.c
-	${GAME_SRC_DIR}/player/trail.c
-	${GAME_SRC_DIR}/player/view.c
-	${GAME_SRC_DIR}/player/weapon.c
-	${GAME_SRC_DIR}/savegame/savegame.c
+	${COMMON_SRC_DIR}/shared/flash.cpp
+	${COMMON_SRC_DIR}/shared/rand.cpp
+	${COMMON_SRC_DIR}/shared/shared.cpp
+	${GAME_SRC_DIR}/g_ai.cpp
+	${GAME_SRC_DIR}/g_chase.cpp
+	${GAME_SRC_DIR}/g_cmds.cpp
+	${GAME_SRC_DIR}/g_combat.cpp
+	${GAME_SRC_DIR}/g_func.cpp
+	${GAME_SRC_DIR}/g_items.cpp
+	${GAME_SRC_DIR}/g_main.cpp
+	${GAME_SRC_DIR}/g_misc.cpp
+	${GAME_SRC_DIR}/g_monster.cpp
+	${GAME_SRC_DIR}/g_phys.cpp
+	${GAME_SRC_DIR}/g_spawn.cpp
+	${GAME_SRC_DIR}/g_svcmds.cpp
+	${GAME_SRC_DIR}/g_target.cpp
+	${GAME_SRC_DIR}/g_trigger.cpp
+	${GAME_SRC_DIR}/g_turret.cpp
+	${GAME_SRC_DIR}/g_utils.cpp
+	${GAME_SRC_DIR}/g_weapon.cpp
+	${GAME_SRC_DIR}/monster/berserker/berserker.cpp
+	${GAME_SRC_DIR}/monster/boss2/boss2.cpp
+	${GAME_SRC_DIR}/monster/boss3/boss3.cpp
+	${GAME_SRC_DIR}/monster/boss3/boss31.cpp
+	${GAME_SRC_DIR}/monster/boss3/boss32.cpp
+	${GAME_SRC_DIR}/monster/brain/brain.cpp
+	${GAME_SRC_DIR}/monster/chick/chick.cpp
+	${GAME_SRC_DIR}/monster/flipper/flipper.cpp
+	${GAME_SRC_DIR}/monster/float/float.cpp
+	${GAME_SRC_DIR}/monster/flyer/flyer.cpp
+	${GAME_SRC_DIR}/monster/gladiator/gladiator.cpp
+	${GAME_SRC_DIR}/monster/gunner/gunner.cpp
+	${GAME_SRC_DIR}/monster/hover/hover.cpp
+	${GAME_SRC_DIR}/monster/infantry/infantry.cpp
+	${GAME_SRC_DIR}/monster/insane/insane.cpp
+	${GAME_SRC_DIR}/monster/medic/medic.cpp
+	${GAME_SRC_DIR}/monster/misc/move.cpp
+	${GAME_SRC_DIR}/monster/mutant/mutant.cpp
+	${GAME_SRC_DIR}/monster/parasite/parasite.cpp
+	${GAME_SRC_DIR}/monster/soldier/soldier.cpp
+	${GAME_SRC_DIR}/monster/supertank/supertank.cpp
+	${GAME_SRC_DIR}/monster/tank/tank.cpp
+	${GAME_SRC_DIR}/player/client.cpp
+	${GAME_SRC_DIR}/player/hud.cpp
+	${GAME_SRC_DIR}/player/trail.cpp
+	${GAME_SRC_DIR}/player/view.cpp
+	${GAME_SRC_DIR}/player/weapon.cpp
+	${GAME_SRC_DIR}/savegame/savegame.cpp
 	)
 
 set(Game-Header
@@ -291,68 +291,68 @@ set(Game-Header
 	)
 
 set(Client-Source
-	${CLIENT_SRC_DIR}/cl_cin.c
-	${CLIENT_SRC_DIR}/cl_console.c
-	${CLIENT_SRC_DIR}/cl_download.c
-	${CLIENT_SRC_DIR}/cl_effects.c
-	${CLIENT_SRC_DIR}/cl_entities.c
-	${CLIENT_SRC_DIR}/cl_input.c
-	${CLIENT_SRC_DIR}/cl_inventory.c
-	${CLIENT_SRC_DIR}/cl_keyboard.c
-	${CLIENT_SRC_DIR}/cl_lights.c
-	${CLIENT_SRC_DIR}/cl_main.c
-	${CLIENT_SRC_DIR}/cl_network.c
-	${CLIENT_SRC_DIR}/cl_parse.c
-	${CLIENT_SRC_DIR}/cl_particles.c
-	${CLIENT_SRC_DIR}/cl_prediction.c
-	${CLIENT_SRC_DIR}/cl_screen.c
-	${CLIENT_SRC_DIR}/cl_tempentities.c
-	${CLIENT_SRC_DIR}/cl_view.c
-	${CLIENT_SRC_DIR}/curl/download.c
-	${CLIENT_SRC_DIR}/curl/qcurl.c
-	${CLIENT_SRC_DIR}/input/sdl.c
-	${CLIENT_SRC_DIR}/menu/menu.c
-	${CLIENT_SRC_DIR}/menu/qmenu.c
-	${CLIENT_SRC_DIR}/menu/videomenu.c
-	${CLIENT_SRC_DIR}/sound/ogg.c
-	${CLIENT_SRC_DIR}/sound/openal.c
-	${CLIENT_SRC_DIR}/sound/qal.c
-	${CLIENT_SRC_DIR}/sound/sdl.c
-	${CLIENT_SRC_DIR}/sound/sound.c
-	${CLIENT_SRC_DIR}/sound/wave.c
-	${CLIENT_SRC_DIR}/vid/glimp_sdl.c
-	${CLIENT_SRC_DIR}/vid/vid.c
-	${COMMON_SRC_DIR}/argproc.c
-	${COMMON_SRC_DIR}/clientserver.c
-	${COMMON_SRC_DIR}/collision.c
-	${COMMON_SRC_DIR}/crc.c
-	${COMMON_SRC_DIR}/cmdparser.c
-	${COMMON_SRC_DIR}/cvar.c
-	${COMMON_SRC_DIR}/filesystem.c
-	${COMMON_SRC_DIR}/glob.c
-	${COMMON_SRC_DIR}/md4.c
-	${COMMON_SRC_DIR}/movemsg.c
-	${COMMON_SRC_DIR}/frame.c
-	${COMMON_SRC_DIR}/netchan.c
-	${COMMON_SRC_DIR}/pmove.c
-	${COMMON_SRC_DIR}/szone.c
-	${COMMON_SRC_DIR}/zone.c
-	${COMMON_SRC_DIR}/shared/flash.c
-	${COMMON_SRC_DIR}/shared/rand.c
-	${COMMON_SRC_DIR}/shared/shared.c
-	${COMMON_SRC_DIR}/unzip/ioapi.c
-	${COMMON_SRC_DIR}/unzip/miniz.c
-	${COMMON_SRC_DIR}/unzip/unzip.c
-	${SERVER_SRC_DIR}/sv_cmd.c
-	${SERVER_SRC_DIR}/sv_conless.c
-	${SERVER_SRC_DIR}/sv_entities.c
-	${SERVER_SRC_DIR}/sv_game.c
-	${SERVER_SRC_DIR}/sv_init.c
-	${SERVER_SRC_DIR}/sv_main.c
-	${SERVER_SRC_DIR}/sv_save.c
-	${SERVER_SRC_DIR}/sv_send.c
-	${SERVER_SRC_DIR}/sv_user.c
-	${SERVER_SRC_DIR}/sv_world.c
+	${CLIENT_SRC_DIR}/cl_cin.cpp
+	${CLIENT_SRC_DIR}/cl_console.cpp
+	${CLIENT_SRC_DIR}/cl_download.cpp
+	${CLIENT_SRC_DIR}/cl_effects.cpp
+	${CLIENT_SRC_DIR}/cl_entities.cpp
+	${CLIENT_SRC_DIR}/cl_input.cpp
+	${CLIENT_SRC_DIR}/cl_inventory.cpp
+	${CLIENT_SRC_DIR}/cl_keyboard.cpp
+	${CLIENT_SRC_DIR}/cl_lights.cpp
+	${CLIENT_SRC_DIR}/cl_main.cpp
+	${CLIENT_SRC_DIR}/cl_network.cpp
+	${CLIENT_SRC_DIR}/cl_parse.cpp
+	${CLIENT_SRC_DIR}/cl_particles.cpp
+	${CLIENT_SRC_DIR}/cl_prediction.cpp
+	${CLIENT_SRC_DIR}/cl_screen.cpp
+	${CLIENT_SRC_DIR}/cl_tempentities.cpp
+	${CLIENT_SRC_DIR}/cl_view.cpp
+	${CLIENT_SRC_DIR}/curl/download.cpp
+	${CLIENT_SRC_DIR}/curl/qcurl.cpp
+	${CLIENT_SRC_DIR}/input/sdl_input.cpp
+	${CLIENT_SRC_DIR}/menu/menu.cpp
+	${CLIENT_SRC_DIR}/menu/qmenu.cpp
+	${CLIENT_SRC_DIR}/menu/videomenu.cpp
+	${CLIENT_SRC_DIR}/sound/ogg.cpp
+	${CLIENT_SRC_DIR}/sound/openal.cpp
+	${CLIENT_SRC_DIR}/sound/qal.cpp
+	${CLIENT_SRC_DIR}/sound/sdl_sound.cpp
+	${CLIENT_SRC_DIR}/sound/sound.cpp
+	${CLIENT_SRC_DIR}/sound/wave.cpp
+	${CLIENT_SRC_DIR}/vid/glimp_sdl.cpp
+	${CLIENT_SRC_DIR}/vid/vid.cpp
+	${COMMON_SRC_DIR}/argproc.cpp
+	${COMMON_SRC_DIR}/clientserver.cpp
+	${COMMON_SRC_DIR}/collision.cpp
+	${COMMON_SRC_DIR}/crc.cpp
+	${COMMON_SRC_DIR}/cmdparser.cpp
+	${COMMON_SRC_DIR}/cvar.cpp
+	${COMMON_SRC_DIR}/filesystem.cpp
+	${COMMON_SRC_DIR}/glob.cpp
+	${COMMON_SRC_DIR}/md4.cpp
+	${COMMON_SRC_DIR}/movemsg.cpp
+	${COMMON_SRC_DIR}/frame.cpp
+	${COMMON_SRC_DIR}/netchan.cpp
+	${COMMON_SRC_DIR}/pmove.cpp
+	${COMMON_SRC_DIR}/szone.cpp
+	${COMMON_SRC_DIR}/zone.cpp
+	${COMMON_SRC_DIR}/shared/flash.cpp
+	${COMMON_SRC_DIR}/shared/rand.cpp
+	${COMMON_SRC_DIR}/shared/shared.cpp
+	${COMMON_SRC_DIR}/unzip/ioapi.cpp
+	${COMMON_SRC_DIR}/unzip/miniz.cpp
+	${COMMON_SRC_DIR}/unzip/unzip.cpp
+	${SERVER_SRC_DIR}/sv_cmd.cpp
+	${SERVER_SRC_DIR}/sv_conless.cpp
+	${SERVER_SRC_DIR}/sv_entities.cpp
+	${SERVER_SRC_DIR}/sv_game.cpp
+	${SERVER_SRC_DIR}/sv_init.cpp
+	${SERVER_SRC_DIR}/sv_main.cpp
+	${SERVER_SRC_DIR}/sv_save.cpp
+	${SERVER_SRC_DIR}/sv_send.cpp
+	${SERVER_SRC_DIR}/sv_user.cpp
+	${SERVER_SRC_DIR}/sv_world.cpp
 	)
 
 set(Client-Header
@@ -386,36 +386,36 @@ set(Client-Header
 	)
 
 set(Server-Source
-	${COMMON_SRC_DIR}/argproc.c
-	${COMMON_SRC_DIR}/clientserver.c
-	${COMMON_SRC_DIR}/collision.c
-	${COMMON_SRC_DIR}/crc.c
-	${COMMON_SRC_DIR}/cmdparser.c
-	${COMMON_SRC_DIR}/cvar.c
-	${COMMON_SRC_DIR}/filesystem.c
-	${COMMON_SRC_DIR}/glob.c
-	${COMMON_SRC_DIR}/md4.c
-	${COMMON_SRC_DIR}/frame.c
-	${COMMON_SRC_DIR}/movemsg.c
-	${COMMON_SRC_DIR}/netchan.c
-	${COMMON_SRC_DIR}/pmove.c
-	${COMMON_SRC_DIR}/szone.c
-	${COMMON_SRC_DIR}/zone.c
-	${COMMON_SRC_DIR}/shared/rand.c
-	${COMMON_SRC_DIR}/shared/shared.c
-	${COMMON_SRC_DIR}/unzip/ioapi.c
-	${COMMON_SRC_DIR}/unzip/miniz.c
-	${COMMON_SRC_DIR}/unzip/unzip.c
-	${SERVER_SRC_DIR}/sv_cmd.c
-	${SERVER_SRC_DIR}/sv_conless.c
-	${SERVER_SRC_DIR}/sv_entities.c
-	${SERVER_SRC_DIR}/sv_game.c
-	${SERVER_SRC_DIR}/sv_init.c
-	${SERVER_SRC_DIR}/sv_main.c
-	${SERVER_SRC_DIR}/sv_save.c
-	${SERVER_SRC_DIR}/sv_send.c
-	${SERVER_SRC_DIR}/sv_user.c
-	${SERVER_SRC_DIR}/sv_world.c
+	${COMMON_SRC_DIR}/argproc.cpp
+	${COMMON_SRC_DIR}/clientserver.cpp
+	${COMMON_SRC_DIR}/collision.cpp
+	${COMMON_SRC_DIR}/crc.cpp
+	${COMMON_SRC_DIR}/cmdparser.cpp
+	${COMMON_SRC_DIR}/cvar.cpp
+	${COMMON_SRC_DIR}/filesystem.cpp
+	${COMMON_SRC_DIR}/glob.cpp
+	${COMMON_SRC_DIR}/md4.cpp
+	${COMMON_SRC_DIR}/frame.cpp
+	${COMMON_SRC_DIR}/movemsg.cpp
+	${COMMON_SRC_DIR}/netchan.cpp
+	${COMMON_SRC_DIR}/pmove.cpp
+	${COMMON_SRC_DIR}/szone.cpp
+	${COMMON_SRC_DIR}/zone.cpp
+	${COMMON_SRC_DIR}/shared/rand.cpp
+	${COMMON_SRC_DIR}/shared/shared.cpp
+	${COMMON_SRC_DIR}/unzip/ioapi.cpp
+	${COMMON_SRC_DIR}/unzip/miniz.cpp
+	${COMMON_SRC_DIR}/unzip/unzip.cpp
+	${SERVER_SRC_DIR}/sv_cmd.cpp
+	${SERVER_SRC_DIR}/sv_conless.cpp
+	${SERVER_SRC_DIR}/sv_entities.cpp
+	${SERVER_SRC_DIR}/sv_game.cpp
+	${SERVER_SRC_DIR}/sv_init.cpp
+	${SERVER_SRC_DIR}/sv_main.cpp
+	${SERVER_SRC_DIR}/sv_save.cpp
+	${SERVER_SRC_DIR}/sv_send.cpp
+	${SERVER_SRC_DIR}/sv_user.cpp
+	${SERVER_SRC_DIR}/sv_world.cpp
 	)
 
 set(Server-Header
@@ -433,27 +433,27 @@ set(Server-Header
 	)
 
 set(GL1-Source
-	${REF_SRC_DIR}/gl1/qgl.c
-	${REF_SRC_DIR}/gl1/gl1_draw.c
-	${REF_SRC_DIR}/gl1/gl1_image.c
-	${REF_SRC_DIR}/gl1/gl1_light.c
-	${REF_SRC_DIR}/gl1/gl1_lightmap.c
-	${REF_SRC_DIR}/gl1/gl1_main.c
-	${REF_SRC_DIR}/gl1/gl1_mesh.c
-	${REF_SRC_DIR}/gl1/gl1_misc.c
-	${REF_SRC_DIR}/gl1/gl1_model.c
-	${REF_SRC_DIR}/gl1/gl1_scrap.c
-	${REF_SRC_DIR}/gl1/gl1_surf.c
-	${REF_SRC_DIR}/gl1/gl1_warp.c
-	${REF_SRC_DIR}/gl1/gl1_sdl.c
-	${REF_SRC_DIR}/gl1/gl1_md2.c
-	${REF_SRC_DIR}/gl1/gl1_sp2.c
-	${REF_SRC_DIR}/files/pcx.c
-	${REF_SRC_DIR}/files/stb.c
-	${REF_SRC_DIR}/files/wal.c
-	${REF_SRC_DIR}/files/pvs.c
-	${COMMON_SRC_DIR}/shared/shared.c
-	${COMMON_SRC_DIR}/md4.c
+	${REF_SRC_DIR}/gl1/qgl.cpp
+	${REF_SRC_DIR}/gl1/gl1_draw.cpp
+	${REF_SRC_DIR}/gl1/gl1_image.cpp
+	${REF_SRC_DIR}/gl1/gl1_light.cpp
+	${REF_SRC_DIR}/gl1/gl1_lightmap.cpp
+	${REF_SRC_DIR}/gl1/gl1_main.cpp
+	${REF_SRC_DIR}/gl1/gl1_mesh.cpp
+	${REF_SRC_DIR}/gl1/gl1_misc.cpp
+	${REF_SRC_DIR}/gl1/gl1_model.cpp
+	${REF_SRC_DIR}/gl1/gl1_scrap.cpp
+	${REF_SRC_DIR}/gl1/gl1_surf.cpp
+	${REF_SRC_DIR}/gl1/gl1_warp.cpp
+	${REF_SRC_DIR}/gl1/gl1_sdl.cpp
+	${REF_SRC_DIR}/gl1/gl1_md2.cpp
+	${REF_SRC_DIR}/gl1/gl1_sp2.cpp
+	${REF_SRC_DIR}/files/pcx.cpp
+	${REF_SRC_DIR}/files/stb.cpp
+	${REF_SRC_DIR}/files/wal.cpp
+	${REF_SRC_DIR}/files/pvs.cpp
+	${COMMON_SRC_DIR}/shared/shared.cpp
+	${COMMON_SRC_DIR}/md4.cpp
 	)
 
 set(GL1-Header
@@ -469,27 +469,27 @@ set(GL1-Header
 	)
 
 set(GL3-Source
-	${REF_SRC_DIR}/gl3/gl3_draw.c
-	${REF_SRC_DIR}/gl3/gl3_image.c
-	${REF_SRC_DIR}/gl3/gl3_light.c
-	${REF_SRC_DIR}/gl3/gl3_lightmap.c
-	${REF_SRC_DIR}/gl3/gl3_main.c
-	${REF_SRC_DIR}/gl3/gl3_mesh.c
-	${REF_SRC_DIR}/gl3/gl3_misc.c
-	${REF_SRC_DIR}/gl3/gl3_model.c
-	${REF_SRC_DIR}/gl3/gl3_sdl.c
-	${REF_SRC_DIR}/gl3/gl3_surf.c
-	${REF_SRC_DIR}/gl3/gl3_warp.c
-	${REF_SRC_DIR}/gl3/gl3_shaders.c
-	${REF_SRC_DIR}/gl3/gl3_md2.c
-	${REF_SRC_DIR}/gl3/gl3_sp2.c
+	${REF_SRC_DIR}/gl3/gl3_draw.cpp
+	${REF_SRC_DIR}/gl3/gl3_image.cpp
+	${REF_SRC_DIR}/gl3/gl3_light.cpp
+	${REF_SRC_DIR}/gl3/gl3_lightmap.cpp
+	${REF_SRC_DIR}/gl3/gl3_main.cpp
+	${REF_SRC_DIR}/gl3/gl3_mesh.cpp
+	${REF_SRC_DIR}/gl3/gl3_misc.cpp
+	${REF_SRC_DIR}/gl3/gl3_model.cpp
+	${REF_SRC_DIR}/gl3/gl3_sdl.cpp
+	${REF_SRC_DIR}/gl3/gl3_surf.cpp
+	${REF_SRC_DIR}/gl3/gl3_warp.cpp
+	${REF_SRC_DIR}/gl3/gl3_shaders.cpp
+	${REF_SRC_DIR}/gl3/gl3_md2.cpp
+	${REF_SRC_DIR}/gl3/gl3_sp2.cpp
 	${REF_SRC_DIR}/gl3/glad/src/glad.c
-	${REF_SRC_DIR}/files/pcx.c
-	${REF_SRC_DIR}/files/stb.c
-	${REF_SRC_DIR}/files/wal.c
-	${REF_SRC_DIR}/files/pvs.c
-	${COMMON_SRC_DIR}/shared/shared.c
-	${COMMON_SRC_DIR}/md4.c
+	${REF_SRC_DIR}/files/pcx.cpp
+	${REF_SRC_DIR}/files/stb.cpp
+	${REF_SRC_DIR}/files/wal.cpp
+	${REF_SRC_DIR}/files/pvs.cpp
+	${COMMON_SRC_DIR}/shared/shared.cpp
+	${COMMON_SRC_DIR}/md4.cpp
 	)
 
 set(GL3-Header
@@ -508,29 +508,29 @@ set(GL3-Header
 	)
 
 set(SOFT-Source
-	${REF_SRC_DIR}/soft/sw_aclip.c
-	${REF_SRC_DIR}/soft/sw_alias.c
-	${REF_SRC_DIR}/soft/sw_bsp.c
-	${REF_SRC_DIR}/soft/sw_draw.c
-	${REF_SRC_DIR}/soft/sw_edge.c
-	${REF_SRC_DIR}/soft/sw_image.c
-	${REF_SRC_DIR}/soft/sw_light.c
-	${REF_SRC_DIR}/soft/sw_main.c
-	${REF_SRC_DIR}/soft/sw_misc.c
-	${REF_SRC_DIR}/soft/sw_model.c
-	${REF_SRC_DIR}/soft/sw_part.c
-	${REF_SRC_DIR}/soft/sw_poly.c
-	${REF_SRC_DIR}/soft/sw_polyset.c
-	${REF_SRC_DIR}/soft/sw_rast.c
-	${REF_SRC_DIR}/soft/sw_scan.c
-	${REF_SRC_DIR}/soft/sw_sprite.c
-	${REF_SRC_DIR}/soft/sw_surf.c
-	${REF_SRC_DIR}/files/pcx.c
-	${REF_SRC_DIR}/files/stb.c
-	${REF_SRC_DIR}/files/wal.c
-	${REF_SRC_DIR}/files/pvs.c
-	${COMMON_SRC_DIR}/shared/shared.c
-	${COMMON_SRC_DIR}/md4.c
+	${REF_SRC_DIR}/soft/sw_aclip.cpp
+	${REF_SRC_DIR}/soft/sw_alias.cpp
+	${REF_SRC_DIR}/soft/sw_bsp.cpp
+	${REF_SRC_DIR}/soft/sw_draw.cpp
+	${REF_SRC_DIR}/soft/sw_edge.cpp
+	${REF_SRC_DIR}/soft/sw_image.cpp
+	${REF_SRC_DIR}/soft/sw_light.cpp
+	${REF_SRC_DIR}/soft/sw_main.cpp
+	${REF_SRC_DIR}/soft/sw_misc.cpp
+	${REF_SRC_DIR}/soft/sw_model.cpp
+	${REF_SRC_DIR}/soft/sw_part.cpp
+	${REF_SRC_DIR}/soft/sw_poly.cpp
+	${REF_SRC_DIR}/soft/sw_polyset.cpp
+	${REF_SRC_DIR}/soft/sw_rast.cpp
+	${REF_SRC_DIR}/soft/sw_scan.cpp
+	${REF_SRC_DIR}/soft/sw_sprite.cpp
+	${REF_SRC_DIR}/soft/sw_surf.cpp
+	${REF_SRC_DIR}/files/pcx.cpp
+	${REF_SRC_DIR}/files/stb.cpp
+	${REF_SRC_DIR}/files/wal.cpp
+	${REF_SRC_DIR}/files/pvs.cpp
+	${COMMON_SRC_DIR}/shared/shared.cpp
+	${COMMON_SRC_DIR}/md4.cpp
 	)
 
 set(SOFT-Header
@@ -545,7 +545,7 @@ set(SOFT-Header
 # Wrapper for the Windows binary
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 	set(Wrapper-Source
-	src/win-wrapper/wrapper.c
+	src/win-wrapper/wrapper.cpp
 	${BACKENDS_SRC_DIR}/windows/icon.rc
 	)
 endif()
