@@ -86,7 +86,7 @@ endif()
 # We need to pass some options to minizip / unzip.
 add_definitions(-DNOUNCRYPT)
 
-if(NOT CMAKE_SYSTEM_NAME MATCHES "Linux" OR NOT CMAKE_SYSTEM_NAME MATCHES "Windows")
+if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Linux" AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 	add_definitions(-DIOAPI_NO_64)
 endif()
 
@@ -553,7 +553,7 @@ endif()
 # Main Quake 2 executable
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-	add_executable(yquake2 ${Client-Source} ${Client-Header} ${Platform-Specific-Source}
+	add_executable(yquake2 WIN32 ${Client-Source} ${Client-Header} ${Platform-Specific-Source}
 			${Backends-Generic-Source})
 	set_target_properties(yquake2 PROPERTIES
 			RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/release
@@ -562,7 +562,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 			${yquake2SDLLinkerFlags} ${yquake2ZLibLinkerFlags} ws2_32 winmm)
 
 	# Wrapper for the Windows binary
-	add_executable(quake2 ${Wrapper-Source})
+	add_executable(quake2 WIN32 ${Wrapper-Source})
 	set_target_properties(quake2 PROPERTIES
 			RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/release
 			)
