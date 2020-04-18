@@ -20,7 +20,13 @@ This project depends on the following libraries:
 
 When building with Visual Studio, I recommend using vcpkg to download and install the above dependencies: https://github.com/microsoft/vcpkg Follow the instructions on that GitHub page.
 
-When you run "vcpkg integrate install", it will tell you "CMake projects should use: "-DCMAKE_TOOLCHAIN_FILE=PATH/TO/vcpkg.cmake", you should use this when running CMake.
+When you run "vcpkg integrate install", it will tell you
+
+```
+CMake projects should use: "-DCMAKE_TOOLCHAIN_FILE=PATH/TO/vcpkg.cmake"
+```
+
+You should use this when running CMake.
 
 To install the above dependencies, run the following command:
 
