@@ -143,15 +143,17 @@ Qcommon_Mainloop(void)
 
 			while (1)
 			{
-#if defined (__GNUC__) && (__i386 || __x86_64__)
 				/* Give the CPU a hint that this is a very tight
 				   spinloop. One PAUSE instruction each loop is
 				   enough to reduce power consumption and head
 				   dispersion a lot, it's 95°C against 67°C on
 				   a Kaby Lake laptop. */
+#if defined (__GNUC__) && (__i386 || __x86_64__)
 				asm("pause");
 #elif defined( _MSC_VER )
 				_mm_pause();
+#elif defined(__aarch64__) || (defined(__ARM_ARCH) && __ARM_ARCH >= 7) || defined(__ARM_ARCH_6K__)
+				asm("yield");
 #endif
 
 				if (Sys_Microseconds() - spintime >= FRAMEDELAY)
@@ -201,6 +203,8 @@ static qboolean checkForHelp(int argc, char **argv)
 				printf("Yamagi Quake II v%s\n", YQ2VERSION);
 				printf("Most interesting commandline arguments:\n");
 				printf("-h or --help: Show this help\n");
+				printf("-cfgdir <path>\n");
+				printf("  set the name of your config directory\n");
 				printf("-datadir <path>\n");
 				printf("  set path to your Quake2 game data (the directory baseq2/ is in)\n");
 				printf("-portable\n");
@@ -226,9 +230,9 @@ static qboolean checkForHelp(int argc, char **argv)
 				printf("  width/height of your custom resolution\n");
 				printf("+set vid_renderer <renderer>\n");
 				printf("  Selects the render backend. Currently available:\n");
-				printf("    'gl1'  (old OpenGL 1.x renderer),\n");
-				printf("    'gl3'  (the shiny new OpenGL 3.2 renderer),\n");
-				printf("    'soft' (the experimental software renderer)\n");
+				printf("    'gl1'  (the OpenGL 1.x renderer),\n");
+				printf("    'gl3'  (the OpenGL 3.2 renderer),\n");
+				printf("    'soft' (the software renderer)\n");
 #endif // DEDICATED_ONLY
 				printf("\nSee https://github.com/yquake2/yquake2/blob/master/doc/04_cvarlist.md\nfor some more cvars\n");
 
@@ -744,11 +748,8 @@ Qcommon_Frame(int usec)
 	if (packetframe) {
 		SV_Frame(servertimedelta);
 		servertimedelta = 0;
-	}
 
-
-	// Reset deltas if necessary.
-	if (packetframe) {
+		// Reset deltas if necessary.
 		packetdelta = 0;
 	}
 }

@@ -847,8 +847,7 @@ NET_IPSocket(char *net_interface, int port, netsrc_t type, int family)
 
 	for (ai = res; ai != NULL; ai = ai->ai_next)
 	{
-		if ((newsocket =
-				 socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol)) == -1)
+		if ((newsocket = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol)) == -1)
 		{
 			Com_Printf("NET_IPSocket: socket: %s\n", strerror(errno));
 			continue;
@@ -1257,8 +1256,8 @@ NET_Sleep(int msec)
 
 	timeout.tv_sec = msec / 1000;
 	timeout.tv_usec = (msec % 1000) * 1000;
-	i = YQ2_MAX(ip_sockets[NS_SERVER], ip6_sockets[NS_SERVER]);
-	i = YQ2_MAX(i, ipx_sockets[NS_SERVER]);
+	i = max(ip_sockets[NS_SERVER], ip6_sockets[NS_SERVER]);
+	i = max(i, ipx_sockets[NS_SERVER]);
 	select(i + 1, &fdset, NULL, NULL, &timeout);
 }
 

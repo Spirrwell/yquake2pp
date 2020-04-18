@@ -806,10 +806,8 @@ initShader2D(gl3ShaderInfo_t* shaderInfo, const char* vertSrc, const char* fragS
 	return true;
 
 err_cleanup:
-	if(shaders2D[0] != 0)  glDeleteShader(shaders2D[0]);
-	if(shaders2D[1] != 0)  glDeleteShader(shaders2D[1]);
 
-	if(prog != 0)  glDeleteProgram(prog);
+	glDeleteProgram(prog);
 
 	return false;
 }
@@ -842,20 +840,20 @@ initShader3D(gl3ShaderInfo_t* shaderInfo, const char* vertSrc, const char* fragS
 
 	prog = CreateShaderProgram(2, shaders3D);
 
-	auto err_cleanup = [&]()
-	{
-		if(shaders3D[0] != 0)  glDeleteShader(shaders3D[0]);
-		if(shaders3D[1] != 0)  glDeleteShader(shaders3D[1]);
-
-		if(prog != 0)  glDeleteProgram(prog);
-
-		return false;
-	};
+	// I think the shaders aren't needed anymore once they're linked into the program
+	glDeleteShader(shaders3D[0]);
+	glDeleteShader(shaders3D[1]);
 
 	if(prog == 0)
 	{
-		return err_cleanup();
+		return false;
 	}
+
+	auto err_cleanup = [&]()
+	{
+		glDeleteProgram(prog);
+		return false;
+	};
 
 	GL3_UseProgram(prog);
 
@@ -949,10 +947,6 @@ initShader3D(gl3ShaderInfo_t* shaderInfo, const char* vertSrc, const char* fragS
 	}
 
 	shaderInfo->shaderProgram = prog;
-
-	// I think the shaders aren't needed anymore once they're linked into the program
-	glDeleteShader(shaders3D[0]);
-	glDeleteShader(shaders3D[1]);
 
 	return true;
 }

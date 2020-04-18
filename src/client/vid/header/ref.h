@@ -198,7 +198,7 @@ typedef struct
 
 typedef struct
 {
-	void	(IMPORT *Sys_Error) (int err_level, const char *str, ...);
+	YQ2_ATTR_NORETURN_FUNCPTR void	(IMPORT *Sys_Error) (int err_level, const char *str, ...);
 
 	void	(IMPORT *Cmd_AddCommand) (char *name, void(*cmd)(void));
 	void	(IMPORT *Cmd_RemoveCommand) (char *name);

@@ -12,6 +12,7 @@
 #  - libGL                                               #
 #                                                        #
 # Optional dependencies:                                 #
+#  - CURL                                                #
 #  - OpenAL                                              #
 #                                                        #
 # Platforms:                                             #
@@ -35,7 +36,12 @@ WITH_CURL:=yes
 # installed
 WITH_OPENAL:=yes
 
-# Enable systemwide installation of game assets
+# Sets an RPATH to $ORIGIN/lib. It can be used to
+# inject custom libraries, e.g. a patches libSDL.so
+# or libopenal.so. Not supported on Windows.
+WITH_RPATH:=yes
+
+# Enable systemwide installation of game assets.
 WITH_SYSTEMWIDE:=no
 
 # This will set the default SYSTEMDIR, a non-empty string
@@ -58,7 +64,7 @@ OSX_APP:=yes
 
 # This is an optional configuration file, it'll be used in
 # case of presence.
-CONFIG_FILE := config.mk
+CONFIG_FILE:=config.mk
 
 # ----------
 
@@ -69,7 +75,7 @@ endif
 
 # Detect the OS
 ifdef SystemRoot
-YQ2_OSTYPE := Windows
+YQ2_OSTYPE ?= Windows
 else
 YQ2_OSTYPE ?= $(shell uname -s)
 endif
@@ -95,7 +101,7 @@ endif
 
 # On Windows / MinGW $(CC) is undefined by default.
 ifeq ($(YQ2_OSTYPE),Windows)
-CC := gcc
+CC ?= gcc
 endif
 
 # Detect the compiler
@@ -111,33 +117,45 @@ endif
 
 # ----------
 
-# Base CFLAGS.
-#
-# -O2 are enough optimizations.
-#
-# -fno-strict-aliasing since the source doesn't comply
-#  with strict aliasing rules and it's next to impossible
-#  to get it there...
-#
-# -fomit-frame-pointer since the framepointer is mostly
-#  useless for debugging Quake II and slows things down.
-#
-# -g to build always with debug symbols. Please DO NOT
-#  CHANGE THIS, since it's our only chance to debug this
-#  crap when random crashes happen!
-#
-# -MMD to generate header dependencies. (They cannot be
-#  generated if building universal binaries on OSX)
-#
-# -fwrapv for defined integer wrapping. MSVC6 did this
-#  and the game code requires it.
-ifeq ($(YQ2_OSTYPE), Darwin)
-CFLAGS := -O2 -fno-strict-aliasing -fomit-frame-pointer \
-		  -Wall -pipe -g -fwrapv
-CFLAGS += $(OSX_ARCH)
+# Base CFLAGS. These may be overridden by the environment.
+# Highest supported optimizations are -O2, higher levels
+# will likely break this crappy code.
+ifdef DEBUG
+CFLAGS ?= -O0 -g -Wall -pipe
 else
-CFLAGS := -std=gnu99 -O2 -fno-strict-aliasing \
-		  -Wall -pipe -g -ggdb -MMD -fwrapv
+CFLAGS ?= -O2 -Wall -pipe -fomit-frame-pointer
+endif
+
+# Always needed are:
+#  -fno-strict-aliasing since the source doesn't comply
+#   with strict aliasing rules and it's next to impossible
+#   to get it there...
+#  -fwrapv for defined integer wrapping. MSVC6 did this
+#   and the game code requires it.
+override CFLAGS += -std=gnu99 -fno-strict-aliasing -fwrapv
+
+# -MMD to generate header dependencies. Unsupported by
+#  the Clang shipped with OS X.
+ifneq ($(YQ2_OSTYPE), Darwin)
+override CFLAGS += -MMD
+endif
+
+# OS X architecture.
+ifeq ($(YQ2_OSTYPE), Darwin)
+override CFLAGS += $(OSX_ARCH)
+endif
+
+# ----------
+
+# ARM needs a sane minimum architecture. We need the `yield`
+# opcode, arm6k is the first iteration that supports it. arm6k
+# is also the first Raspberry PI generation and older hardware
+# is likely too slow to run the game. We're not enforcing the
+# minimum architecture, but if you're build for something older
+# like arm5 the `yield` opcode isn't compiled in and the game
+# (especially q2ded) will consume more CPU time than necessary.
+ifeq ($(YQ2_ARCH), arm)
+CFLAGS += -march=armv6k
 endif
 
 # ----------
@@ -146,27 +164,27 @@ endif
 ifeq ($(COMPILER), clang)
 	# -Wno-missing-braces because otherwise clang complains
 	#  about totally valid 'vec3_t bla = {0}' constructs.
-	CFLAGS += -Wno-missing-braces
+	override CFLAGS += -Wno-missing-braces
 else ifeq ($(COMPILER), gcc)
 	# GCC 8.0 or higher.
 	ifeq ($(shell test $(COMPILERVER) -ge 80000; echo $$?),0)
 	    # -Wno-format-truncation and -Wno-format-overflow
 		# because GCC spams about 50 false positives.
-    	CFLAGS += -Wno-format-truncation -Wno-format-overflow
+		override CFLAGS += -Wno-format-truncation -Wno-format-overflow
 	endif
 endif
 
 # ----------
 
 # Defines the operating system and architecture
-CFLAGS += -DYQ2OSTYPE=\"$(YQ2_OSTYPE)\" -DYQ2ARCH=\"$(YQ2_ARCH)\"
+override CFLAGS += -DYQ2OSTYPE=\"$(YQ2_OSTYPE)\" -DYQ2ARCH=\"$(YQ2_ARCH)\"
 
 # ----------
 
 # Fore reproduceable builds, look here for details:
 # https://reproducible-builds.org/specs/source-date-epoch/
 ifdef SOURCE_DATE_EPOCH
-CFLAGS += -DBUILD_DATE=\"$(shell date --utc --date="@${SOURCE_DATE_EPOCH}" +"%b %_d %Y" | sed -e 's/ /\\ /g')\"
+override CFLAGS += -DBUILD_DATE=\"$(shell date --utc --date="@${SOURCE_DATE_EPOCH}" +"%b %_d %Y" | sed -e 's/ /\\ /g')\"
 endif
 
 # ----------
@@ -176,27 +194,30 @@ endif
 # Would be nice if Clang had something comparable.
 ifeq ($(YQ2_ARCH), i386)
 ifeq ($(COMPILER), gcc)
-CFLAGS += -ffloat-store
+override CFLAGS += -ffloat-store
 endif
 endif
 
 # Force SSE math on x86_64. All sane compilers should do this
 # anyway, just to protect us from broken Linux distros.
 ifeq ($(YQ2_ARCH), x86_64)
-CFLAGS += -mfpmath=sse
+override CFLAGS += -mfpmath=sse
 endif
 
 # ----------
 
 # Systemwide installation.
 ifeq ($(WITH_SYSTEMWIDE),yes)
-CFLAGS += -DSYSTEMWIDE
+override CFLAGS += -DSYSTEMWIDE
 ifneq ($(WITH_SYSTEMDIR),"")
-CFLAGS += -DSYSTEMDIR=\"$(WITH_SYSTEMDIR)\"
+override CFLAGS += -DSYSTEMDIR=\"$(WITH_SYSTEMDIR)\"
 endif
 endif
 
 # ----------
+
+# We don't support encrypted ZIP files.
+ZIPCFLAGS := -DNOUNCRYPT
 
 # Just set IOAPI_NO_64 on everything that's not Linux or Windows,
 # otherwise minizip will use fopen64(), fseek64() and friends that
@@ -215,9 +236,6 @@ ZIPCFLAGS += -DIOAPI_NO_64
 endif
 endif
 
-# We don't support encrypted ZIP files.
-ZIPCFLAGS += -DNOUNCRYPT
-
 # ----------
 
 # Extra CFLAGS for SDL.
@@ -227,13 +245,13 @@ SDLCFLAGS := $(shell sdl2-config --cflags)
 
 # Base include path.
 ifeq ($(YQ2_OSTYPE),Linux)
-INCLUDE := -I/usr/include
+INCLUDE ?= -I/usr/include
 else ifeq ($(YQ2_OSTYPE),FreeBSD)
-INCLUDE := -I/usr/local/include
+INCLUDE ?= -I/usr/local/include
 else ifeq ($(YQ2_OSTYPE),OpenBSD)
-INCLUDE := -I/usr/local/include
+INCLUDE ?= -I/usr/local/include
 else ifeq ($(YQ2_OSTYPE),Windows)
-INCLUDE := -I/usr/include
+INCLUDE ?= -I/usr/include
 endif
 
 # ----------
@@ -243,27 +261,39 @@ GLAD_INCLUDE = -Isrc/client/refresh/gl3/glad/include
 
 # ----------
 
-# Base LDFLAGS.
+# Base LDFLAGS. This is just the include path.
 ifeq ($(YQ2_OSTYPE),Linux)
-LDFLAGS := -L/usr/lib -lm -ldl -rdynamic
+LDFLAGS ?= -L/usr/lib
 else ifeq ($(YQ2_OSTYPE),FreeBSD)
-LDFLAGS := -L/usr/local/lib -lm
+LDFLAGS ?= -L/usr/local/lib
 else ifeq ($(YQ2_OSTYPE),OpenBSD)
-LDFLAGS := -L/usr/local/lib -lm
+LDFLAGS ?= -L/usr/local/lib
 else ifeq ($(YQ2_OSTYPE),Windows)
-LDFLAGS := -L/usr/lib -lws2_32 -lwinmm -static-libgcc
+LDFLAGS ?= -L/usr/lib
+endif
+
+# Required libraries.
+ifeq ($(YQ2_OSTYPE),Linux)
+override LDFLAGS += -lm -ldl -rdynamic
+else ifeq ($(YQ2_OSTYPE),FreeBSD)
+override LDFLAGS += -lm
+else ifeq ($(YQ2_OSTYPE),OpenBSD)
+override LDFLAGS += -lm
+else ifeq ($(YQ2_OSTYPE),Windows)
+override LDFLAGS += -lws2_32 -lwinmm -static-libgcc
 else ifeq ($(YQ2_OSTYPE), Darwin)
-LDFLAGS := $(OSX_ARCH) -lm
+override LDFLAGS += $(OSX_ARCH)
 endif
 
 # Keep symbols hidden.
-CFLAGS += -fvisibility=hidden
-LDFLAGS += -fvisibility=hidden
+override CFLAGS += -fvisibility=hidden
+override LDFLAGS += -fvisibility=hidden
 
 ifneq ($(YQ2_OSTYPE), Darwin)
 ifneq ($(YQ2_OSTYPE), OpenBSD)
-# for some reason the OSX & OpenBSD linker doesn't support this...
-LDFLAGS += -Wl,--no-undefined
+# For some reason the OSX & OpenBSD
+# linker doesn't support this...
+override LDFLAGS += -Wl,--no-undefined
 endif
 endif
 
@@ -307,6 +337,7 @@ all: config client server game ref_gl1 ref_gl3 ref_soft
 config:
 	@echo "Build configuration"
 	@echo "============================"
+	@echo "WITH_CURL = $(WITH_CURL)"
 	@echo "WITH_OPENAL = $(WITH_OPENAL)"
 	@echo "WITH_SYSTEMWIDE = $(WITH_SYSTEMWIDE)"
 	@echo "WITH_SYSTEMDIR = $(WITH_SYSTEMDIR)"
@@ -400,26 +431,8 @@ ifeq ($(YQ2_OSTYPE), FreeBSD)
 release/quake2 : LDFLAGS += -lexecinfo
 endif
 
-ifeq ($(YQ2_OSTYPE), FreeBSD)
-release/quake2 : LDFLAGS += -Wl,-z,origin,-rpath='$$ORIGIN/lib' -lexecinfo
-else ifeq ($(YQ2_OSTYPE), Linux)
+ifeq ($(WITH_RPATH),yes)
 release/quake2 : LDFLAGS += -Wl,-z,origin,-rpath='$$ORIGIN/lib'
-endif
-
-ifeq ($(WITH_SYSTEMWIDE),yes)
-ifneq ($(WITH_SYSTEMDIR),"")
-ifeq ($(YQ2_OSTYPE), FreeBSD)
-release/quake2 : LDFLAGS += -Wl,-z,origin,-rpath='$(WITH_SYSTEMDIR)/lib'
-else ifeq ($(YQ2_OSTYPE), Linux)
-release/quake2 : LDFLAGS += -Wl,-z,origin,-rpath='$(WITH_SYSTEMDIR)/lib'
-endif
-else
-ifeq ($(YQ2_OSTYPE), FreeBSD)
-release/quake2 : LDFLAGS += -Wl,-z,origin,-rpath='/usr/share/games/quake2/lib'
-else ifeq ($(YQ2_OSTYPE), Linux)
-release/quake2 : LDFLAGS += -Wl,-z,origin,-rpath='/usr/share/games/quake2/lib'
-endif
-endif
 endif
 endif
 
