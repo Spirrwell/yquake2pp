@@ -28,6 +28,10 @@
 #include "header/zone.h"
 #include <setjmp.h>
 
+#if defined (_MSC_VER)
+#include <immintrin.h>
+#endif
+
 cvar_t *developer;
 cvar_t *modder;
 cvar_t *timescale;
@@ -146,6 +150,8 @@ Qcommon_Mainloop(void)
 				   dispersion a lot, it's 95°C against 67°C on
 				   a Kaby Lake laptop. */
 				asm("pause");
+#elif defined( _MSC_VER )
+				_mm_pause();
 #endif
 
 				if (Sys_Microseconds() - spintime >= FRAMEDELAY)

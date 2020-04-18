@@ -36,7 +36,7 @@ cvar_t *cl_http_filelists;
 cvar_t *cl_http_proxy;
 cvar_t *cl_http_max_connections;
 
-dlquirks_t dlquirks = { .error = false, .filelist = true, .gamedir = {'\0'} };
+dlquirks_t dlquirks = { false, true, {'\0'} };
 
 typedef enum
 {
