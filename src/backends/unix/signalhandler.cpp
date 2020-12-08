@@ -30,7 +30,7 @@
 
 #include "../../common/header/common.h"
 
-#if defined(__linux__) || defined(__FreeBSD__) || defined(__APPLE__)
+#if defined(HAVE_EXECINFO)
 #include <execinfo.h>
 
 void
@@ -72,7 +72,7 @@ printBacktrace(int sig)
 	printf("Compiler:     %s\n", __VERSION__);
 	printf("Signal:       %i\n", sig);
 	printf("\nBacktrace:\n");
-	printf("  Not available on this plattform.\n\n");
+	printf("  Not available on this platform.\n\n");
 }
 
 #endif

@@ -26,6 +26,8 @@
  * =======================================================================
  */
 
+#include <ctype.h>
+
 #include "header/common.h"
 
 #define MAX_ALIAS_NAME 32
@@ -50,14 +52,14 @@ typedef struct cmdalias_s
 char retval[256];
 int alias_count; /* for detecting runaway loops */
 cmdalias_t *cmd_alias;
-qboolean cmd_wait;
+int cmd_wait;
 static int cmd_argc;
 static char *cmd_argv[MAX_STRING_TOKENS];
 static char *cmd_null_string = "";
 static char cmd_args[MAX_STRING_CHARS];
 sizebuf_t cmd_text;
-byte cmd_text_buf[8192];
-char defer_text_buf[8192];
+byte cmd_text_buf[32768];
+char defer_text_buf[32768];
 
 /*
  * Causes execution of the remainder of the command buffer to be delayed
@@ -67,7 +69,7 @@ char defer_text_buf[8192];
 void
 Cmd_Wait_f(void)
 {
-	cmd_wait = true;
+	cmd_wait = Sys_Milliseconds();
 }
 
 void
@@ -172,6 +174,17 @@ Cbuf_Execute(void)
 	char line[1024];
 	int quotes;
 
+	if(cmd_wait > 0)
+	{
+		// make sure that "wait" in scripts waits for ~16.66ms (1 frame at 60fps)
+		// regardless of framerate
+		if (Sys_Milliseconds() - cmd_wait <= 16)
+		{
+			return;
+		}
+		cmd_wait = 0;
+	}
+
 	alias_count = 0; /* don't allow infinite alias loops */
 
 	while (cmd_text.cursize)
@@ -227,11 +240,10 @@ Cbuf_Execute(void)
 		/* execute the command line */
 		Cmd_ExecuteString(line);
 
-		if (cmd_wait)
+		if (cmd_wait > 0)
 		{
 			/* skip out while text still remains in buffer,
-			   leaving it for next frame */
-			cmd_wait = false;
+			   leaving it for after we're done waiting */
 			break;
 		}
 	}
@@ -355,6 +367,9 @@ Cbuf_AddLateCommands(void)
 	return ret;
 }
 
+/*
+ * Execute a script file
+ */
 void
 Cmd_Exec_f(void)
 {
@@ -375,7 +390,7 @@ Cmd_Exec_f(void)
 		return;
 	}
 
-	Com_Printf("execing %s\n", Cmd_Argv(1));
+	Com_Printf("execing %s.\n", Cmd_Argv(1));
 
 	/* the file doesn't have a trailing 0, so we need to copy it off */
 	/* we also add a newline */
@@ -388,6 +403,21 @@ Cmd_Exec_f(void)
 
 	Z_Free(f2);
 	FS_FreeFile(f);
+}
+
+/*
+ * Inserts the current value of a variable as command text
+ */
+void Cmd_Vstr_f( void ) {
+	const char	*v;
+
+	if (Cmd_Argc() != 2) {
+		Com_Printf("vstr <variablename> : execute a variable command\n");
+		return;
+	}
+
+	v = Cvar_VariableString(Cmd_Argv(1));
+	Cbuf_InsertText(va("%s\n", v));
 }
 
 /*
@@ -757,12 +787,6 @@ Cmd_Exists(char *cmd_name)
 	return false;
 }
 
-int
-qsort_strcomp(const void *s1, const void *s2)
-{
-	return strcmp(*(char **)s1, *(char **)s2);
-}
-
 char *
 Cmd_CompleteCommand(char *partial)
 {
@@ -848,7 +872,7 @@ Cmd_CompleteCommand(char *partial)
 		}
 
 		/* Sort it */
-		qsort(pmatch, i, sizeof(pmatch[0]), qsort_strcomp);
+		qsort(pmatch, i, sizeof(pmatch[0]), Q_sort_strcomp);
 
 		Com_Printf("\n\n");
 
@@ -885,6 +909,89 @@ Cmd_CompleteCommand(char *partial)
 	}
 
 	return NULL;
+}
+
+char *
+Cmd_CompleteMapCommand(char *partial)
+{
+	char **mapNames;
+	int i, j, k, nbMatches, len, nMaps;
+	char *mapName;
+	char *pmatch[1024];
+	qboolean partialFillContinue = true;
+
+	if ((mapNames = FS_ListFiles2("maps/*.bsp", &nMaps, 0, 0)) != 0)
+	{
+		len = strlen(partial);
+		nbMatches = 0;
+		memset(retval, 0, strlen(retval));
+
+		for (i = 0; i < nMaps - 1; i++)
+		{
+			if (strrchr(mapNames[i], '/'))
+			{
+				mapName = strrchr(mapNames[i], '/') + 1;
+			}
+			else
+			{
+				mapName = mapNames[i];
+			}
+
+			mapName = strtok(mapName, ".");
+
+			/* check for exact match */
+			if (!Q_strcasecmp(partial, mapName))
+			{
+				strcpy(retval, partial);
+			}
+			/* check for partial match */
+			else if (!Q_strncasecmp(partial, mapName, len))
+			{
+				pmatch[nbMatches] = mapName;
+				nbMatches++;
+			}
+		}
+
+		if (nbMatches == 1)
+		{
+			strcpy(retval, pmatch[0]);
+		}
+		else if (nbMatches > 1)
+		{
+			Com_Printf("\n=================\n\n");
+
+			for (j = 0; j < nbMatches; j++)
+			{
+				Com_Printf("%s\n", pmatch[j]);
+			}
+
+			//partial complete
+			for (j = 0; j < strlen(pmatch[0]); j++)
+			{
+				for (k = 1; k < nbMatches; k++)
+				{
+					if (j >= strlen(pmatch[k]) || tolower((unsigned char)pmatch[0][j]) != tolower((unsigned char)pmatch[k][j]))
+					{
+						partialFillContinue = false;
+						break;
+					}
+				}
+
+				if (partialFillContinue)
+				{
+					retval[j] = pmatch[0][j];
+				}
+				else
+				{
+					break;
+				}
+			}
+		}
+
+		FS_FreeList(mapNames, nMaps);
+	}
+
+	return retval;
 }
 
 qboolean
@@ -1017,6 +1124,7 @@ Cmd_Init(void)
 	/* register our commands */
 	Cmd_AddCommand("cmdlist", Cmd_List_f);
 	Cmd_AddCommand("exec", Cmd_Exec_f);
+	Cmd_AddCommand("vstr", Cmd_Vstr_f);
 	Cmd_AddCommand("echo", Cmd_Echo_f);
 	Cmd_AddCommand("alias", Cmd_Alias_f);
 	Cmd_AddCommand("wait", Cmd_Wait_f);

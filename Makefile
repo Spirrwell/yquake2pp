@@ -50,12 +50,6 @@ WITH_SYSTEMWIDE:=no
 # MUST NOT be surrounded by quotation marks!
 WITH_SYSTEMDIR:=""
 
-# This will set the architectures of the OSX-binaries.
-# You have to make sure your libs/frameworks supports
-# these architectures! To build an universal ppc-compatible
-# one would add -arch ppc for example.
-OSX_ARCH:=-arch $(shell uname -m | sed -e s/i.86/i386/)
-
 # This will set the build options to create an MacOS .app-bundle.
 # The app-bundle itself will not be created, but the runtime paths
 # will be set to expect the game-data in *.app/
@@ -115,6 +109,11 @@ else
 COMPILER := unknown
 endif
 
+# ASAN includes DEBUG
+ifdef ASAN
+DEBUG=1
+endif
+
 # ----------
 
 # Base CFLAGS. These may be overridden by the environment.
@@ -122,6 +121,9 @@ endif
 # will likely break this crappy code.
 ifdef DEBUG
 CFLAGS ?= -O0 -g -Wall -pipe
+ifdef ASAN
+CFLAGS += -fsanitize=address
+endif
 else
 CFLAGS ?= -O2 -Wall -pipe -fomit-frame-pointer
 endif
@@ -132,7 +134,9 @@ endif
 #   to get it there...
 #  -fwrapv for defined integer wrapping. MSVC6 did this
 #   and the game code requires it.
-override CFLAGS += -std=gnu99 -fno-strict-aliasing -fwrapv
+#  -fvisibility=hidden to keep symbols hidden. This is
+#   mostly best practice and not really necessary.
+override CFLAGS += -std=gnu99 -fno-strict-aliasing -fwrapv -fvisibility=hidden
 
 # -MMD to generate header dependencies. Unsupported by
 #  the Clang shipped with OS X.
@@ -142,7 +146,7 @@ endif
 
 # OS X architecture.
 ifeq ($(YQ2_OSTYPE), Darwin)
-override CFLAGS += $(OSX_ARCH)
+override CFLAGS += -arch $(YQ2_ARCH)
 endif
 
 # ----------
@@ -181,7 +185,7 @@ override CFLAGS += -DYQ2OSTYPE=\"$(YQ2_OSTYPE)\" -DYQ2ARCH=\"$(YQ2_ARCH)\"
 
 # ----------
 
-# Fore reproduceable builds, look here for details:
+# For reproduceable builds, look here for details:
 # https://reproducible-builds.org/specs/source-date-epoch/
 ifdef SOURCE_DATE_EPOCH
 override CFLAGS += -DBUILD_DATE=\"$(shell date --utc --date="@${SOURCE_DATE_EPOCH}" +"%b %_d %Y" | sed -e 's/ /\\ /g')\"
@@ -248,6 +252,8 @@ ifeq ($(YQ2_OSTYPE),Linux)
 INCLUDE ?= -I/usr/include
 else ifeq ($(YQ2_OSTYPE),FreeBSD)
 INCLUDE ?= -I/usr/local/include
+else ifeq ($(YQ2_OSTYPE),NetBSD)
+INCLUDE ?= -I/usr/X11R7/include -I/usr/pkg/include
 else ifeq ($(YQ2_OSTYPE),OpenBSD)
 INCLUDE ?= -I/usr/local/include
 else ifeq ($(YQ2_OSTYPE),Windows)
@@ -261,15 +267,22 @@ GLAD_INCLUDE = -Isrc/client/refresh/gl3/glad/include
 
 # ----------
 
-# Base LDFLAGS. This is just the include path.
+# Base LDFLAGS. This is just the library path.
 ifeq ($(YQ2_OSTYPE),Linux)
 LDFLAGS ?= -L/usr/lib
 else ifeq ($(YQ2_OSTYPE),FreeBSD)
 LDFLAGS ?= -L/usr/local/lib
+else ifeq ($(YQ2_OSTYPE),NetBSD)
+LDFLAGS ?= -L/usr/X11R7/lib -Wl,-R/usr/X11R7/lib -L/usr/pkg/lib -Wl,-R/usr/pkg/lib
 else ifeq ($(YQ2_OSTYPE),OpenBSD)
 LDFLAGS ?= -L/usr/local/lib
 else ifeq ($(YQ2_OSTYPE),Windows)
 LDFLAGS ?= -L/usr/lib
+endif
+
+# Link address sanitizer if requested.
+ifdef ASAN
+LDFLAGS += -fsanitize=address
 endif
 
 # Required libraries.
@@ -277,17 +290,17 @@ ifeq ($(YQ2_OSTYPE),Linux)
 override LDFLAGS += -lm -ldl -rdynamic
 else ifeq ($(YQ2_OSTYPE),FreeBSD)
 override LDFLAGS += -lm
+else ifeq ($(YQ2_OSTYPE),NetBSD)
+override LDFLAGS += -lm
 else ifeq ($(YQ2_OSTYPE),OpenBSD)
 override LDFLAGS += -lm
 else ifeq ($(YQ2_OSTYPE),Windows)
 override LDFLAGS += -lws2_32 -lwinmm -static-libgcc
 else ifeq ($(YQ2_OSTYPE), Darwin)
-override LDFLAGS += $(OSX_ARCH)
+override LDFLAGS += -arch $(YQ2_ARCH)
+else ifeq ($(YQ2_OSTYPE), Haiku)
+override LDFLAGS += -lm -lnetwork
 endif
-
-# Keep symbols hidden.
-override CFLAGS += -fvisibility=hidden
-override LDFLAGS += -fvisibility=hidden
 
 ifneq ($(YQ2_OSTYPE), Darwin)
 ifneq ($(YQ2_OSTYPE), OpenBSD)
@@ -341,6 +354,7 @@ config:
 	@echo "WITH_OPENAL = $(WITH_OPENAL)"
 	@echo "WITH_SYSTEMWIDE = $(WITH_SYSTEMWIDE)"
 	@echo "WITH_SYSTEMDIR = $(WITH_SYSTEMDIR)"
+	@echo "WITH_RPATH = $(WITH_RPATH)"
 	@echo "============================"
 	@echo ""
 
@@ -402,7 +416,7 @@ ifeq ($(YQ2_OSTYPE), Darwin)
 build/client/%.o : %.c
 	@echo "===> CC $<"
 	${Q}mkdir -p $(@D)
-	${Q}$(CC) $(OSX_ARCH) -x objective-c -c $(CFLAGS) $(SDLCFLAGS) $(ZIPCFLAGS) $(INCLUDE)  $< -o $@
+	${Q}$(CC) -arch $(YQ2_ARCH) -x objective-c -c $(CFLAGS) $(SDLCFLAGS) $(ZIPCFLAGS) $(INCLUDE)  $< -o $@
 else
 build/client/%.o: %.c
 	@echo "===> CC $<"
@@ -427,12 +441,44 @@ release/quake2 : CFLAGS += -DUSE_OPENAL -DDEFAULT_OPENAL_DRIVER='"libopenal.so.1
 endif
 endif
 
+ifeq ($(YQ2_OSTYPE), Linux)
+release/quake2 : CFLAGS += -DHAVE_EXECINFO
+endif
+
+ifeq ($(YQ2_OSTYPE), Darwin)
+release/quake2 : CFLAGS += -DHAVE_EXECINFO
+endif
+
+ifeq ($(YQ2_OSTYPE), SunOS)
+release/quake2 : CFLAGS += -DHAVE_EXECINFO
+endif
+
 ifeq ($(YQ2_OSTYPE), FreeBSD)
+release/quake2 : CFLAGS += -DHAVE_EXECINFO
+release/quake2 : LDFLAGS += -lexecinfo
+endif
+
+ifeq ($(YQ2_OSTYPE), NetBSD)
+release/quake2 : CFLAGS += -DHAVE_EXECINFO
+release/quake2 : LDFLAGS += -lexecinfo
+endif
+
+ifeq ($(YQ2_OSTYPE), OpenBSD)
+release/quake2 : CFLAGS += -DHAVE_EXECINFO
+release/quake2 : LDFLAGS += -lexecinfo
+endif
+
+ifeq ($(YQ2_OSTYPE), Haiku)
+release/quake2 : CFLAGS += -DHAVE_EXECINFO
 release/quake2 : LDFLAGS += -lexecinfo
 endif
 
 ifeq ($(WITH_RPATH),yes)
+ifeq ($(YQ2_OSTYPE), Darwin)
+release/quake2 : LDFLAGS += -Wl,-rpath,'@executable_path/lib'
+else
 release/quake2 : LDFLAGS += -Wl,-z,origin,-rpath='$$ORIGIN/lib'
+endif
 endif
 endif
 

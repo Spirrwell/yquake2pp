@@ -32,7 +32,7 @@
 #include "shared.h"
 #include "crc.h"
 
-#define YQ2VERSION "7.44pre"
+#define YQ2VERSION "8.00pre"
 #define BASEDIRNAME "baseq2"
 
 #ifndef YQ2OSTYPE
@@ -371,6 +371,8 @@ qboolean Cmd_Exists(char *cmd_name);
 
 char *Cmd_CompleteCommand(char *partial);
 
+char *Cmd_CompleteMapCommand(char *partial);
+
 /* attempts to match a partial command for automatic command line completion */
 /* returns NULL if nothing fits */
 
@@ -682,6 +684,7 @@ int FS_LoadFile(char *path, void **buffer);
 qboolean FS_FileInGamedir(const char *file);
 qboolean FS_AddPAKFromGamedir(const char *pak);
 const char* FS_GetNextRawPath(const char* lastRawPath);
+char **FS_ListMods(int *nummods);
 
 /* a null buffer will just return the file length without loading */
 /* a -1 length is not present */
@@ -755,6 +758,8 @@ extern char cfgdir[MAX_OSPATH];
 
 /* Hack for working 'game' cmd */
 extern char userGivenGame[MAX_QPATH];
+extern char **mapnames;
+extern int nummaps;
 
 extern FILE *log_stats_file;
 
@@ -792,7 +797,7 @@ void SCR_BeginLoadingPlaque(void);
 
 void SV_Init(void);
 void SV_Shutdown(char *finalmsg, qboolean reconnect);
-void SV_Frame(int msec);
+void SV_Frame(int usec);
 
 /* ======================================================================= */
 
@@ -817,6 +822,7 @@ void *Sys_GetGameAPI(void *parms);
 void Sys_UnloadGame(void);
 void Sys_GetWorkDir(char *buffer, size_t len);
 qboolean Sys_SetWorkDir(char *path);
+void Sys_Realpath(const char *in, char *out, size_t size);
 
 // Windows only (system.c)
 #ifdef _WIN32

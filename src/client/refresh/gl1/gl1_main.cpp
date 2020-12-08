@@ -976,7 +976,7 @@ R_RenderView(refdef_t *fd)
 						// Decode the colour name from its character.
 						for (eye = 0; eye < 2; ++eye) {
 							colour = 0;
-							switch (toupper(gl1_stereo_anaglyph_colors->string[eye])) {
+							switch (toupper((unsigned char)gl1_stereo_anaglyph_colors->string[eye])) {
 								case 'B': ++colour; // 001 Blue
 								case 'G': ++colour; // 010 Green
 								case 'C': ++colour; // 011 Cyan
@@ -1290,7 +1290,7 @@ R_Register(void)
 static int
 SetMode_impl(int *pwidth, int *pheight, int mode, int fullscreen)
 {
-	R_Printf(PRINT_ALL, "setting mode %d:", mode);
+	R_Printf(PRINT_ALL, "Setting mode %d:", mode);
 
 	/* mode -1 is not in the vid mode table - so we keep the values in pwidth
 	   and pheight and don't even try to look up the mode info */
@@ -1310,7 +1310,7 @@ SetMode_impl(int *pwidth, int *pheight, int mode, int fullscreen)
 		}
 	}
 
-	R_Printf(PRINT_ALL, " %d %d\n", *pwidth, *pheight);
+	R_Printf(PRINT_ALL, " %dx%d (vid_fullscreen %i)\n", *pwidth, *pheight, fullscreen);
 
 	if (!ri.GLimp_InitGraphics(fullscreen, pwidth, pheight))
 	{
