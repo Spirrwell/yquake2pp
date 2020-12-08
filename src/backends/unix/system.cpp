@@ -59,7 +59,7 @@ extern FILE	*logfile;
 /* ================================================================ */
 
 void
-Sys_Error(char *error, ...)
+Sys_Error(const char *error, ...)
 {
 	va_list argptr;
 	char string[1024];
@@ -342,7 +342,8 @@ Sys_UnloadGame(void)
 void *
 Sys_GetGameAPI(void *parms)
 {
-	void *(*GetGameAPI)(void *);
+	typedef void*(*GetGameAPI_t)(void*);
+	GetGameAPI_t GetGameAPI;
 
 	char name[MAX_OSPATH];
 	char *path;
@@ -415,7 +416,7 @@ Sys_GetGameAPI(void *parms)
 		}
 	}
 
-	GetGameAPI = (void *)dlsym(game_library, "GetGameAPI");
+	GetGameAPI = (GetGameAPI_t)dlsym(game_library, "GetGameAPI");
 
 	if (!GetGameAPI)
 	{

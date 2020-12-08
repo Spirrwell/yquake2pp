@@ -277,16 +277,21 @@ NET_BaseAdrToString(netadr_t a)
 	{
 		case NA_IP:
 		case NA_LOOPBACK:
+		{
 			Com_sprintf(s, sizeof(s), "%i.%i.%i.%i", a.ip[0],
 				a.ip[1], a.ip[2], a.ip[3]);
 			break;
+		}
 
 		case NA_BROADCAST:
+		{
 			Com_sprintf(s, sizeof(s), "255.255.255.255");
 			break;
+		}
 
 		case NA_IP6:
 		case NA_MULTICAST6:
+		{
 			memset(&ss, 0, sizeof(ss));
 			s6 = (struct sockaddr_in6 *)&ss;
 
@@ -342,10 +347,13 @@ NET_BaseAdrToString(netadr_t a)
 			}
 
 			break;
+		}
 
 		default:
+		{
 			Com_sprintf(s, sizeof(s), "invalid IP address family type");
 			break;
+		}
 	}
 
 	return s;
@@ -805,7 +813,8 @@ NET_Config(qboolean multiplayer)
 int
 NET_Socket(char *net_interface, int port, netsrc_t type, int family)
 {
-	char Buf[BUFSIZ], *Host, *Service;
+	char Buf[BUFSIZ], *Service;
+	const char *Host = nullptr;
 	int newsocket, Error;
 	struct sockaddr_storage ss;
 	struct addrinfo hints, *res, *ai;

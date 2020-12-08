@@ -200,7 +200,7 @@ set(REF-Windows-Source
 	)
 
 set(REF-Unix-Source
-	${BACKENDS_SRC_DIR}/unix/shared/hunk.c
+	${BACKENDS_SRC_DIR}/unix/shared/hunk.cpp
 	)
 
 # Set the nessesary platform specific source
