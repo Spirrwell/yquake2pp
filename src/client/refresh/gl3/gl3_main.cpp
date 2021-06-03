@@ -122,6 +122,7 @@ cvar_t *gl_lightmap;
 cvar_t *gl_shadows;
 cvar_t *gl3_debugcontext;
 cvar_t *gl3_usebigvbo;
+cvar_t *r_fixsurfsky;
 
 // Yaw-Pitch-Roll
 // equivalent to R_z * R_y * R_x where R_x is the trans matrix for rotating around X axis for aroundXdeg
@@ -197,8 +198,8 @@ GL3_Register(void)
 
 	gl_drawbuffer = ri.Cvar_Get("gl_drawbuffer", "GL_BACK", 0);
 	r_vsync = ri.Cvar_Get("r_vsync", "1", CVAR_ARCHIVE);
-	gl_msaa_samples = ri.Cvar_Get ( "gl_msaa_samples", "0", CVAR_ARCHIVE );
-	gl_retexturing = ri.Cvar_Get("gl_retexturing", "1", CVAR_ARCHIVE);
+	gl_msaa_samples = ri.Cvar_Get ( "r_msaa_samples", "0", CVAR_ARCHIVE );
+	gl_retexturing = ri.Cvar_Get("r_retexturing", "1", CVAR_ARCHIVE);
 	gl3_debugcontext = ri.Cvar_Get("gl3_debugcontext", "0", 0);
 	r_mode = ri.Cvar_Get("r_mode", "4", CVAR_ARCHIVE);
 	r_customwidth = ri.Cvar_Get("r_customwidth", "1024", CVAR_ARCHIVE);
@@ -216,13 +217,14 @@ GL3_Register(void)
 	r_drawentities = ri.Cvar_Get("r_drawentities", "1", 0);
 	r_drawworld = ri.Cvar_Get("r_drawworld", "1", 0);
 	r_fullbright = ri.Cvar_Get("r_fullbright", "0", 0);
+	r_fixsurfsky = ri.Cvar_Get("r_fixsurfsky", "0", CVAR_ARCHIVE);
 
 	/* don't bilerp characters and crosshairs */
-	gl_nolerp_list = ri.Cvar_Get("gl_nolerp_list", "pics/conchars.pcx pics/ch1.pcx pics/ch2.pcx pics/ch3.pcx", 0);
+	gl_nolerp_list = ri.Cvar_Get("r_nolerp_list", "pics/conchars.pcx pics/ch1.pcx pics/ch2.pcx pics/ch3.pcx", 0);
 	gl_nobind = ri.Cvar_Get("gl_nobind", "0", 0);
 
 	gl_texturemode = ri.Cvar_Get("gl_texturemode", "GL_LINEAR_MIPMAP_NEAREST", CVAR_ARCHIVE);
-	gl_anisotropic = ri.Cvar_Get("gl_anisotropic", "0", CVAR_ARCHIVE);
+	gl_anisotropic = ri.Cvar_Get("r_anisotropic", "0", CVAR_ARCHIVE);
 
 	vid_fullscreen = ri.Cvar_Get("vid_fullscreen", "0", CVAR_ARCHIVE);
 	vid_gamma = ri.Cvar_Get("vid_gamma", "1.2", CVAR_ARCHIVE);
@@ -233,7 +235,7 @@ GL3_Register(void)
 	gl3_overbrightbits = ri.Cvar_Get("gl3_overbrightbits", "1.3", CVAR_ARCHIVE);
 
 	gl_lightmap = ri.Cvar_Get("gl_lightmap", "0", 0);
-	gl_shadows = ri.Cvar_Get("gl_shadows", "0", CVAR_ARCHIVE);
+	gl_shadows = ri.Cvar_Get("r_shadows", "0", CVAR_ARCHIVE);
 
 	r_modulate = ri.Cvar_Get("r_modulate", "1", CVAR_ARCHIVE);
 	gl_zfix = ri.Cvar_Get("gl_zfix", "0", 0);
@@ -268,7 +270,7 @@ GL3_Register(void)
 	//gl_modulate = ri.Cvar_Get("gl_modulate", "1", CVAR_ARCHIVE);
 	//r_mode = ri.Cvar_Get("r_mode", "4", CVAR_ARCHIVE);
 	//gl_lightmap = ri.Cvar_Get("gl_lightmap", "0", 0);
-	//gl_shadows = ri.Cvar_Get("gl_shadows", "0", CVAR_ARCHIVE);
+	//gl_shadows = ri.Cvar_Get("r_shadows", "0", CVAR_ARCHIVE);
 	//gl_nobind = ri.Cvar_Get("gl_nobind", "0", 0);
 	gl_showtris = ri.Cvar_Get("gl_showtris", "0", 0);
 	gl_showbbox = Cvar_Get("gl_showbbox", "0", 0);
@@ -282,7 +284,7 @@ GL3_Register(void)
 	//gl_texturemode = ri.Cvar_Get("gl_texturemode", "GL_LINEAR_MIPMAP_NEAREST", CVAR_ARCHIVE);
 	gl1_texturealphamode = ri.Cvar_Get("gl1_texturealphamode", "default", CVAR_ARCHIVE);
 	gl1_texturesolidmode = ri.Cvar_Get("gl1_texturesolidmode", "default", CVAR_ARCHIVE);
-	//gl_anisotropic = ri.Cvar_Get("gl_anisotropic", "0", CVAR_ARCHIVE);
+	//gl_anisotropic = ri.Cvar_Get("r_anisotropic", "0", CVAR_ARCHIVE);
 	//r_lockpvs = ri.Cvar_Get("r_lockpvs", "0", 0);
 
 	//gl1_palettedtexture = ri.Cvar_Get("gl1_palettedtexture", "0", CVAR_ARCHIVE); NOPE.
@@ -297,9 +299,9 @@ GL3_Register(void)
 
 	//r_customwidth = ri.Cvar_Get("r_customwidth", "1024", CVAR_ARCHIVE);
 	//r_customheight = ri.Cvar_Get("r_customheight", "768", CVAR_ARCHIVE);
-	//gl_msaa_samples = ri.Cvar_Get ( "gl_msaa_samples", "0", CVAR_ARCHIVE );
+	//gl_msaa_samples = ri.Cvar_Get ( "r_msaa_samples", "0", CVAR_ARCHIVE );
 
-	//gl_retexturing = ri.Cvar_Get("gl_retexturing", "1", CVAR_ARCHIVE);
+	//gl_retexturing = ri.Cvar_Get("r_retexturing", "1", CVAR_ARCHIVE);
 
 
 	gl1_stereo = ri.Cvar_Get( "gl1_stereo", "0", CVAR_ARCHIVE );
@@ -371,9 +373,6 @@ GL3_SetMode(void)
 
 	fullscreen = (int)vid_fullscreen->value;
 
-	vid_fullscreen->modified = false;
-	r_mode->modified = false;
-
 	/* a bit hackish approach to enable custom resolutions:
 	   Glimp_SetMode needs these values set for mode -1 */
 	vid.width = r_customwidth->value;
@@ -399,7 +398,7 @@ GL3_SetMode(void)
 			if (gl_msaa_samples->value != 0.0f)
 			{
 				R_Printf(PRINT_ALL, "gl_msaa_samples was %d - will try again with gl_msaa_samples = 0\n", (int)gl_msaa_samples->value);
-				ri.Cvar_SetValue("gl_msaa_samples", 0.0f);
+				ri.Cvar_SetValue("r_msaa_samples", 0.0f);
 				gl_msaa_samples->modified = false;
 
 				if ((err = SetMode_impl(&vid.width, &vid.height, r_mode->value, 0)) == rserr_ok)
@@ -1689,12 +1688,6 @@ GL3_Clear(void)
 void
 GL3_BeginFrame(float camera_separation)
 {
-	/* change modes if necessary */
-	if (r_mode->modified)
-	{
-		vid_fullscreen->modified = true;
-	}
-
 #if 0 // TODO: stereo stuff
 	gl_state.camera_separation = camera_separation;
 	// force a vid_restart if gl1_stereo has been modified.
@@ -1824,52 +1817,68 @@ GL3_SetPalette(const unsigned char *palette)
 	glClearColor(1, 0, 0.5, 0.5);
 }
 
+/*
+=====================
+GL3_EndWorldRenderpass
+=====================
+*/
+static qboolean
+GL3_EndWorldRenderpass( void )
+{
+	return true;
+}
+
 extern "C"
 {
-	Q2_DLL_EXPORTED refexport_t
-	GetRefAPI(refimport_t imp)
-	{
-		refexport_t re = {0};
+Q2_DLL_EXPORTED refexport_t
+GetRefAPI(refimport_t imp)
+{
+	refexport_t re = {0};
 
-		ri = imp;
+	ri = imp;
 
-		re.api_version = API_VERSION;
+	re.api_version = API_VERSION;
 
-		re.Init = GL3_Init;
-		re.Shutdown = GL3_Shutdown;
-		re.PrepareForWindow = GL3_PrepareForWindow;
-		re.InitContext = GL3_InitContext;
-		re.ShutdownContext = GL3_ShutdownContext;
-		re.IsVSyncActive = GL3_IsVsyncActive;
+	re.Init = GL3_Init;
+	re.Shutdown = GL3_Shutdown;
+	re.PrepareForWindow = GL3_PrepareForWindow;
+	re.InitContext = GL3_InitContext;
+	re.ShutdownContext = GL3_ShutdownContext;
+	re.IsVSyncActive = GL3_IsVsyncActive;
 
-		re.BeginRegistration = GL3_BeginRegistration;
-		re.RegisterModel = GL3_RegisterModel;
-		re.RegisterSkin = GL3_RegisterSkin;
+	re.BeginRegistration = GL3_BeginRegistration;
+	re.RegisterModel = GL3_RegisterModel;
+	re.RegisterSkin = GL3_RegisterSkin;
 
-		re.SetSky = GL3_SetSky;
-		re.EndRegistration = GL3_EndRegistration;
+	re.SetSky = GL3_SetSky;
+	re.EndRegistration = GL3_EndRegistration;
 
-		re.RenderFrame = GL3_RenderFrame;
+	re.RenderFrame = GL3_RenderFrame;
 
-		re.DrawFindPic = GL3_Draw_FindPic;
-		re.DrawGetPicSize = GL3_Draw_GetPicSize;
+	re.DrawFindPic = GL3_Draw_FindPic;
+	re.DrawGetPicSize = GL3_Draw_GetPicSize;
 
-		re.DrawPicScaled = GL3_Draw_PicScaled;
-		re.DrawStretchPic = GL3_Draw_StretchPic;
+	re.DrawPicScaled = GL3_Draw_PicScaled;
+	re.DrawStretchPic = GL3_Draw_StretchPic;
 
-		re.DrawCharScaled = GL3_Draw_CharScaled;
-		re.DrawTileClear = GL3_Draw_TileClear;
-		re.DrawFill = GL3_Draw_Fill;
-		re.DrawFadeScreen = GL3_Draw_FadeScreen;
+	re.DrawCharScaled = GL3_Draw_CharScaled;
+	re.DrawTileClear = GL3_Draw_TileClear;
+	re.DrawFill = GL3_Draw_Fill;
+	re.DrawFadeScreen = GL3_Draw_FadeScreen;
 
-		re.DrawStretchRaw = GL3_Draw_StretchRaw;
-		re.SetPalette = GL3_SetPalette;
+	re.DrawStretchRaw = GL3_Draw_StretchRaw;
+	re.SetPalette = GL3_SetPalette;
 
-		re.BeginFrame = GL3_BeginFrame;
-		re.EndFrame = GL3_EndFrame;
+	re.BeginFrame = GL3_BeginFrame;
+	re.EndWorldRenderpass = GL3_EndWorldRenderpass;
+	re.EndFrame = GL3_EndFrame;
 
-		return re;
-	}
+	// Tell the client that we're unsing the
+	// new renderer restart API.
+	ri.Vid_RequestRestart(RESTART_NO);
+
+	return re;
+}
 }
 
 void R_Printf(int level, const char* msg, ...)

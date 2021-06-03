@@ -410,7 +410,7 @@ SP_turret_base(edict_t *self)
  */
 void
 turret_driver_die(edict_t *self, edict_t *inflictor, edict_t *attacker,
-		int damage, vec3_t point /* unused */)
+		int damage, vec3_t point)
 {
 	edict_t *ent;
 

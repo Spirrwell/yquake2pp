@@ -115,7 +115,7 @@ float		xscaleinv, yscaleinv;
 float		xscaleshrink, yscaleshrink;
 float		aliasxscale, aliasyscale, aliasxcenter, aliasycenter;
 
-mplane_t	screenedge[4];
+cplane_t	screenedge[4];
 
 //
 // refresh flags
@@ -135,6 +135,7 @@ float	se_time1, se_time2, de_time1, de_time2;
 
 cvar_t	*r_lefthand;
 cvar_t	*r_gunfov;
+cvar_t	*r_farsee;
 static cvar_t	*sw_aliasstats;
 cvar_t	*sw_clearcolor;
 cvar_t	*sw_drawflat;
@@ -163,6 +164,7 @@ static cvar_t  *r_customheight;
 
 static cvar_t	*r_speeds;
 cvar_t	*r_lightlevel;	//FIXME HACK
+cvar_t	*r_fixsurfsky;
 
 static cvar_t	*vid_fullscreen;
 static cvar_t	*vid_gamma;
@@ -248,9 +250,9 @@ VID_DamageZBuffer(int u, int v)
 static void
 VID_NoDamageZBuffer(void)
 {
-	vid_zminu = vid.width;
+	vid_zminu = vid_buffer_width;
 	vid_zmaxu = 0;
-	vid_zminv = vid.height;
+	vid_zminv = vid_buffer_height;
 	vid_zmaxv = 0;
 }
 
@@ -282,9 +284,9 @@ static void
 VID_WholeDamageZBuffer(void)
 {
 	vid_zminu = 0;
-	vid_zmaxu = vid.width;
+	vid_zmaxu = vid_buffer_width;
 	vid_zminv = 0;
-	vid_zmaxv = vid.height;
+	vid_zmaxv = vid_buffer_height;
 }
 
 /*
@@ -321,9 +323,9 @@ VID_DamageBuffer(int u, int v)
 static void
 VID_NoDamageBuffer(void)
 {
-	vid_minu = vid.width;
+	vid_minu = vid_buffer_width;
 	vid_maxu = 0;
-	vid_minv = vid.height;
+	vid_minv = vid_buffer_height;
 	vid_maxv = 0;
 }
 
@@ -332,9 +334,9 @@ static void
 VID_WholeDamageBuffer(void)
 {
 	vid_minu = 0;
-	vid_maxu = vid.width;
+	vid_maxu = vid_buffer_width;
 	vid_minv = 0;
-	vid_maxv = vid.height;
+	vid_maxv = vid_buffer_height;
 }
 
 /*
@@ -343,12 +345,12 @@ R_InitTurb
 ================
 */
 static void
-R_InitTurb (void)
+R_InitTurb (int width)
 {
 	int		i;
 
-	memset(blanktable, 0, (vid.width+CYCLE) * sizeof(int));
-	for (i = 0; i < (vid.width+CYCLE); i++)
+	memset(blanktable, 0, (width+CYCLE) * sizeof(int));
+	for (i = 0; i < (width+CYCLE); i++)
 	{
 		sintable[i] = AMP + sin(i*3.14159*2/CYCLE)*AMP;
 		intsintable[i] = AMP2 + sin(i*3.14159*2/CYCLE)*AMP2; // AMP2, not 20
@@ -373,7 +375,7 @@ R_RegisterVariables (void)
 	sw_overbrightbits = ri.Cvar_Get("sw_overbrightbits", "1.0", CVAR_ARCHIVE);
 	sw_custom_particles = ri.Cvar_Get("sw_custom_particles", "0", CVAR_ARCHIVE);
 	sw_texture_filtering = ri.Cvar_Get("sw_texture_filtering", "0", CVAR_ARCHIVE);
-	sw_retexturing = ri.Cvar_Get("sw_retexturing", "0", CVAR_ARCHIVE);
+	sw_retexturing = ri.Cvar_Get("r_retexturing", "1", CVAR_ARCHIVE);
 	sw_gunzposition = ri.Cvar_Get("sw_gunzposition", "8", CVAR_ARCHIVE);
 
 	// On MacOS texture is cleaned up after render and code have to copy a whole
@@ -389,6 +391,7 @@ R_RegisterVariables (void)
 
 	r_lefthand = ri.Cvar_Get( "hand", "0", CVAR_USERINFO | CVAR_ARCHIVE );
 	r_gunfov = ri.Cvar_Get( "r_gunfov", "80", CVAR_ARCHIVE );
+	r_farsee = ri.Cvar_Get("r_farsee", "0", CVAR_LATCH | CVAR_ARCHIVE);
 	r_speeds = ri.Cvar_Get ("r_speeds", "0", 0);
 	r_fullbright = ri.Cvar_Get ("r_fullbright", "0", 0);
 	r_drawentities = ri.Cvar_Get ("r_drawentities", "1", 0);
@@ -401,6 +404,7 @@ R_RegisterVariables (void)
 	r_vsync = ri.Cvar_Get("r_vsync", "1", CVAR_ARCHIVE);
 	r_customwidth = ri.Cvar_Get("r_customwidth", "1024", CVAR_ARCHIVE);
 	r_customheight = ri.Cvar_Get("r_customheight", "768", CVAR_ARCHIVE);
+	r_fixsurfsky = ri.Cvar_Get("r_fixsurfsky", "0", CVAR_ARCHIVE);
 
 	vid_fullscreen = ri.Cvar_Get( "vid_fullscreen", "0", CVAR_ARCHIVE );
 	vid_gamma = ri.Cvar_Get( "vid_gamma", "1.0", CVAR_ARCHIVE );
@@ -425,7 +429,7 @@ R_UnRegister (void)
 }
 
 static void RE_ShutdownContext(void);
-static void SWimp_CreateRender(void);
+static void SWimp_CreateRender(int width, int height);
 static int RE_InitContext(void *win);
 static qboolean RE_SetMode(void);
 
@@ -437,9 +441,6 @@ R_Init
 static qboolean
 RE_Init(void)
 {
-	R_Printf(PRINT_ALL, "Refresh: " REF_VERSION "\n");
-	R_Printf(PRINT_ALL, "Client: " YQ2VERSION "\n\n");
-
 	R_RegisterVariables ();
 	R_InitImages ();
 	Mod_Init ();
@@ -471,6 +472,8 @@ RE_Init(void)
 
 	// create the window
 	ri.Vid_MenuInit();
+
+	R_Printf(PRINT_ALL, "ref_soft version: "REF_VERSION"\n");
 
 	return true;
 }
@@ -544,7 +547,9 @@ R_ReallocateMapBuffers (void)
 			r_outofsurfaces = false;
 		}
 
-		if (r_cnumsurfs < NUMSTACKSURFACES)
+		if ((r_farsee->value > 0) && (r_cnumsurfs < NUMSTACKSURFACES))
+			r_cnumsurfs = NUMSTACKSURFACES * 2;
+		else if (r_cnumsurfs < NUMSTACKSURFACES)
 			r_cnumsurfs = NUMSTACKSURFACES;
 
 		// edge_t->surf limited size to short
@@ -619,7 +624,9 @@ R_ReallocateMapBuffers (void)
 			r_outofedges = false;
 		}
 
-		if (r_numallocatededges < NUMSTACKEDGES)
+		if ((r_farsee->value > 0) && (r_numallocatededges < NUMSTACKEDGES * 2))
+			r_numallocatededges = NUMSTACKEDGES * 2;
+		else if (r_numallocatededges < NUMSTACKEDGES)
 			r_numallocatededges = NUMSTACKEDGES;
 
 		r_edges = (edge_t*)malloc (r_numallocatededges * sizeof(edge_t));
@@ -707,8 +714,8 @@ R_ReallocateMapBuffers (void)
 		}
 
 		// used up to 8 * width spans for render, allocate once  before use
-		if (r_numallocatededgebasespans < vid.width * 8)
-			r_numallocatededgebasespans = vid.width * 8;
+		if (r_numallocatededgebasespans < vid_buffer_width * 8)
+			r_numallocatededgebasespans = vid_buffer_width * 8;
 
 		edge_basespans  = (espan_t*)malloc(r_numallocatededgebasespans * sizeof(espan_t));
 		if (!edge_basespans)
@@ -848,8 +855,13 @@ R_DrawEntitiesOnList (void)
 				R_AliasDrawModel(currententity, currentmodel);
 				break;
 
-			default:
+			case mod_brush:
 				break;
+
+			default:
+				R_Printf(PRINT_ALL, "%s: Bad modeltype %d\n",
+					__func__, currentmodel->type);
+				return;
 			}
 		}
 	}
@@ -893,8 +905,13 @@ R_DrawEntitiesOnList (void)
 				R_AliasDrawModel(currententity, currentmodel);
 				break;
 
-			default:
+			case mod_brush:
 				break;
+
+			default:
+				R_Printf(PRINT_ALL, "%s: Bad modeltype %d\n",
+					__func__, currentmodel->type);
+				return;
 			}
 		}
 	}
@@ -965,7 +982,7 @@ R_FindTopnode (vec3_t mins, vec3_t maxs)
 
 	while (1)
 	{
-		mplane_t *splitplane;
+		cplane_t *splitplane;
 		int sides;
 
 		if (node->visframe != r_visframecount)
@@ -1078,12 +1095,12 @@ R_DrawBEntitiesOnList (void)
 	{
 		entity_t *currententity = &r_newrefdef.entities[i];
 		const model_t *currentmodel = currententity->model;
+		if ( currententity->flags & RF_BEAM )
+			continue;
 		if (!currentmodel)
 			continue;
 		if (currentmodel->nummodelsurfaces == 0)
 			continue;	// clip brush only
-		if ( currententity->flags & RF_BEAM )
-			continue;
 		if (currentmodel->type != mod_brush)
 			continue;
 		// see if the bounding box lets us trivially reject, also sets
@@ -1294,7 +1311,8 @@ RE_RenderFrame (refdef_t *fd)
 	VectorCopy (fd->viewangles, r_refdef.viewangles);
 
 	// compare current position with old
-	if (!VectorCompareRound(fd->vieworg, lastvieworg) ||
+	if (vid_buffer_width <= 640 ||
+	    !VectorCompareRound(fd->vieworg, lastvieworg) ||
 	    !VectorCompare(fd->viewangles, lastviewangles))
 	{
 		fastmoving = true;
@@ -1392,9 +1410,6 @@ RE_RenderFrame (refdef_t *fd)
 static void
 R_InitGraphics( int width, int height )
 {
-	vid.width  = width;
-	vid.height = height;
-
 	// free z buffer
 	if ( d_pzbuffer )
 	{
@@ -1410,7 +1425,7 @@ R_InitGraphics( int width, int height )
 		sc_base = NULL;
 	}
 
-	d_pzbuffer = (zvalue_t*)malloc(vid.width * vid.height * sizeof(zvalue_t));
+	d_pzbuffer = (zvalue_t*)malloc(width * height * sizeof(zvalue_t));
 
 	R_InitCaches();
 
@@ -1427,8 +1442,10 @@ RE_BeginFrame( float camera_separation )
 {
 	// pallete without changes
 	palette_changed = false;
+	// run without speed optimization
+	fastmoving = false;
 
-	while (r_mode->modified || vid_fullscreen->modified || r_vsync->modified)
+	while (r_vsync->modified)
 	{
 		RE_SetMode();
 	}
@@ -1443,7 +1460,8 @@ RE_BeginFrame( float camera_separation )
 		// we need redraw everything
 		VID_WholeDamageBuffer();
 		// and backbuffer should be zeroed
-		memset(swap_buffers + ((swap_current + 1)&1), 0, vid.height * vid.width * sizeof(pixel_t));
+		memset(swap_buffers + ((swap_current + 1)&1), 0,
+			vid_buffer_height * vid_buffer_width * sizeof(pixel_t));
 
 		vid_gamma->modified = false;
 		sw_overbrightbits->modified = false;
@@ -1463,8 +1481,6 @@ RE_SetMode(void)
 
 	fullscreen = (int)vid_fullscreen->value;
 
-	vid_fullscreen->modified = false;
-	r_mode->modified = false;
 	r_vsync->modified = false;
 
 	/* a bit hackish approach to enable custom resolutions:
@@ -1478,7 +1494,6 @@ RE_SetMode(void)
 	*/
 	if ((err = SWimp_SetMode(&vid.width, &vid.height, r_mode->value, fullscreen)) == rserr_ok)
 	{
-		R_InitGraphics( vid.width, vid.height );
 		if (r_mode->value == -1)
 		{
 			sw_state.prev_mode = 4; /* safe default for custom mode */
@@ -1492,13 +1507,10 @@ RE_SetMode(void)
 	{
 		if (err == rserr_invalid_fullscreen)
 		{
-			R_InitGraphics( vid.width, vid.height );
-
 			ri.Cvar_SetValue("vid_fullscreen", 0);
-			vid_fullscreen->modified = false;
 			R_Printf(PRINT_ALL, "%s() - fullscreen unavailable in this mode\n", __func__);
 
-			if ((SWimp_SetMode(&vid.width, &vid.height, r_mode->value, 0)) == rserr_ok)
+			if (SWimp_SetMode(&vid.width, &vid.height, r_mode->value, 0) == rserr_ok)
 			{
 				return true;
 			}
@@ -1519,7 +1531,7 @@ RE_SetMode(void)
 		}
 
 		/* try setting it back to something safe */
-		if ((SWimp_SetMode(&vid.width, &vid.height, sw_state.prev_mode, 0)) != rserr_ok)
+		if (SWimp_SetMode(&vid.width, &vid.height, sw_state.prev_mode, 0) != rserr_ok)
 		{
 			R_Printf(PRINT_ALL, "%s() - could not revert to safe mode\n", __func__);
 			return false;
@@ -1713,6 +1725,11 @@ RE_SetSky (char *name, float rotate, vec3_t axis)
 	{
 		Com_sprintf (pathname, sizeof(pathname), "env/%s%s.pcx", skyname, suf[r_skysideimage[i]]);
 		r_skytexinfo[i].image = R_FindImage (pathname, it_sky);
+		if (!r_skytexinfo[i].image)
+		{
+			Com_sprintf (pathname, sizeof(pathname), "pics/Skies/%s%s.m8", skyname, suf[r_skysideimage[i]]);
+			r_skytexinfo[i].image = R_FindImage (pathname, it_sky);
+		}
 	}
 }
 
@@ -1789,59 +1806,75 @@ static int RE_PrepareForWindow(void)
 }
 
 /*
+=====================
+RE_EndWorldRenderpass
+=====================
+*/
+static qboolean
+RE_EndWorldRenderpass( void )
+{
+	return true;
+}
+
+/*
 ===============
 GetRefAPI
 ===============
 */
 extern "C"
 {
-	Q2_DLL_EXPORTED refexport_t
-	GetRefAPI(refimport_t imp)
-	{
-		// struct for save refexport callbacks, copy of re struct from main file
-		// used different variable name for prevent confusion and cppcheck warnings
-		refexport_t	refexport;
+Q2_DLL_EXPORTED refexport_t
+GetRefAPI(refimport_t imp)
+{
+	// struct for save refexport callbacks, copy of re struct from main file
+	// used different variable name for prevent confusion and cppcheck warnings
+	refexport_t	refexport;
 
-		memset(&refexport, 0, sizeof(refexport_t));
-		ri = imp;
+	memset(&refexport, 0, sizeof(refexport_t));
+	ri = imp;
 
-		refexport.api_version = API_VERSION;
+	refexport.api_version = API_VERSION;
 
-		refexport.BeginRegistration = RE_BeginRegistration;
-		refexport.RegisterModel = RE_RegisterModel;
-		refexport.RegisterSkin = RE_RegisterSkin;
-		refexport.DrawFindPic = RE_Draw_FindPic;
-		refexport.SetSky = RE_SetSky;
-		refexport.EndRegistration = RE_EndRegistration;
+	refexport.BeginRegistration = RE_BeginRegistration;
+	refexport.RegisterModel = RE_RegisterModel;
+	refexport.RegisterSkin = RE_RegisterSkin;
+	refexport.DrawFindPic = RE_Draw_FindPic;
+	refexport.SetSky = RE_SetSky;
+	refexport.EndRegistration = RE_EndRegistration;
 
-		refexport.RenderFrame = RE_RenderFrame;
+	refexport.RenderFrame = RE_RenderFrame;
 
-		refexport.DrawGetPicSize = RE_Draw_GetPicSize;
+	refexport.DrawGetPicSize = RE_Draw_GetPicSize;
 
-		refexport.DrawPicScaled = RE_Draw_PicScaled;
-		refexport.DrawStretchPic = RE_Draw_StretchPic;
-		refexport.DrawCharScaled = RE_Draw_CharScaled;
-		refexport.DrawTileClear = RE_Draw_TileClear;
-		refexport.DrawFill = RE_Draw_Fill;
-		refexport.DrawFadeScreen = RE_Draw_FadeScreen;
+	refexport.DrawPicScaled = RE_Draw_PicScaled;
+	refexport.DrawStretchPic = RE_Draw_StretchPic;
+	refexport.DrawCharScaled = RE_Draw_CharScaled;
+	refexport.DrawTileClear = RE_Draw_TileClear;
+	refexport.DrawFill = RE_Draw_Fill;
+	refexport.DrawFadeScreen = RE_Draw_FadeScreen;
 
-		refexport.DrawStretchRaw = RE_Draw_StretchRaw;
+	refexport.DrawStretchRaw = RE_Draw_StretchRaw;
 
-		refexport.Init = RE_Init;
-		refexport.IsVSyncActive = RE_IsVsyncActive;
-		refexport.Shutdown = RE_Shutdown;
-		refexport.InitContext = RE_InitContext;
-		refexport.ShutdownContext = RE_ShutdownContext;
-		refexport.PrepareForWindow = RE_PrepareForWindow;
+	refexport.Init = RE_Init;
+	refexport.IsVSyncActive = RE_IsVsyncActive;
+	refexport.Shutdown = RE_Shutdown;
+	refexport.InitContext = RE_InitContext;
+	refexport.ShutdownContext = RE_ShutdownContext;
+	refexport.PrepareForWindow = RE_PrepareForWindow;
 
-		refexport.SetPalette = RE_SetPalette;
-		refexport.BeginFrame = RE_BeginFrame;
-		refexport.EndFrame = RE_EndFrame;
+	refexport.SetPalette = RE_SetPalette;
+	refexport.BeginFrame = RE_BeginFrame;
+	refexport.EndWorldRenderpass = RE_EndWorldRenderpass;
+	refexport.EndFrame = RE_EndFrame;
 
-		Swap_Init ();
+	// Tell the client that we're unsing the
+	// new renderer restart API.
+	ri.Vid_RequestRestart(RESTART_NO);
 
-		return refexport;
-	}
+	Swap_Init ();
+
+	return refexport;
+}
 }
 
 /*
@@ -1862,6 +1895,9 @@ static SDL_Window	*window = NULL;
 static SDL_Texture	*texture = NULL;
 static SDL_Renderer	*renderer = NULL;
 
+int vid_buffer_height = 0;
+int vid_buffer_width = 0;
+
 static int
 RE_InitContext(void *win)
 {
@@ -1869,7 +1905,7 @@ RE_InitContext(void *win)
 
 	if(win == NULL)
 	{
-		ri.Sys_Error(ERR_FATAL, "RE_InitContext() must not be called with NULL argument!");
+		ri.Sys_Error(ERR_FATAL, "%s() must not be called with NULL argument!", __func__);
 		return false;
 	}
 
@@ -1898,6 +1934,9 @@ RE_InitContext(void *win)
 	   This will show the new, black contents of the window. */
 	SDL_RenderPresent(renderer);
 
+	vid_buffer_height = vid.height;
+	vid_buffer_width = vid.width;
+
 	texture = SDL_CreateTexture(renderer,
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
 				    SDL_PIXELFORMAT_BGRA8888,
@@ -1905,7 +1944,10 @@ RE_InitContext(void *win)
 				    SDL_PIXELFORMAT_ARGB8888,
 #endif
 				    SDL_TEXTUREACCESS_STREAMING,
-				    vid.width, vid.height);
+				    vid_buffer_width, vid_buffer_height);
+
+	R_InitGraphics(vid_buffer_width, vid_buffer_height);
+	SWimp_CreateRender(vid_buffer_width, vid_buffer_height);
 
 	return true;
 }
@@ -2037,7 +2079,7 @@ RE_CopyFrame (Uint32 * pixels, int pitch, int vmin, int vmax)
 	Uint32 *sdl_palette = (Uint32 *)sw_state.currentpalette;
 
 	// no gaps between images rows
-	if (pitch == vid.width)
+	if (pitch == vid_buffer_width)
 	{
 		const Uint32	*max_pixels;
 		Uint32	*pixels_pos;
@@ -2046,29 +2088,32 @@ RE_CopyFrame (Uint32 * pixels, int pitch, int vmin, int vmax)
 		max_pixels = pixels + vmax;
 		buffer_pos = vid_buffer + vmin;
 
-		for (pixels_pos = pixels + vmin; pixels_pos < max_pixels; pixels_pos++)
+		pixels_pos = pixels + vmin;
+
+		while ( pixels_pos < max_pixels)
 		{
 			*pixels_pos = sdl_palette[*buffer_pos];
 			buffer_pos++;
+			pixels_pos++;
 		}
 	}
 	else
 	{
 		int y,x, buffer_pos, ymin, ymax;
 
-		ymin = vmin / vid.width;
-		ymax = vmax / vid.width;
+		ymin = vmin / vid_buffer_width;
+		ymax = vmax / vid_buffer_width;
 
-		buffer_pos = ymin * vid.width;
+		buffer_pos = ymin * vid_buffer_width;
 		pixels += ymin * pitch;
 		for (y=ymin; y < ymax;  y++)
 		{
-			for (x=0; x < vid.width; x ++)
+			for (x=0; x < vid_buffer_width; x ++)
 			{
 				pixels[x] = sdl_palette[vid_buffer[buffer_pos + x]];
 			}
 			pixels += pitch;
-			buffer_pos += vid.width;
+			buffer_pos += vid_buffer_width;
 		}
 	}
 }
@@ -2112,15 +2157,17 @@ RE_CleanFrame(void)
 	int pitch;
 	Uint32 *pixels;
 
-	memset(swap_buffers, 0, vid.height * vid.width * sizeof(pixel_t) * 2);
+	memset(swap_buffers, 0,
+		vid_buffer_height * vid_buffer_width * sizeof(pixel_t) * 2);
 
 	if (SDL_LockTexture(texture, NULL, (void**)&pixels, &pitch))
 	{
 		Com_Printf("Can't lock texture: %s\n", SDL_GetError());
 		return;
 	}
+
 	// only cleanup texture without flush texture to screen
-	memset(pixels, 0, pitch * vid.height);
+	memset(pixels, 0, pitch * vid_buffer_height);
 	SDL_UnlockTexture(texture);
 
 	// All changes flushed
@@ -2146,8 +2193,14 @@ RE_FlushFrame(int vmin, int vmax)
 	{
 		// On MacOS texture is cleaned up after render,
 		// code have to copy a whole screen to the texture
-		RE_CopyFrame (pixels, pitch / sizeof(Uint32), 0, vid.height * vid.width);
+		RE_CopyFrame (pixels, pitch / sizeof(Uint32), 0, vid_buffer_height * vid_buffer_width);
 	}
+
+	if (((int)sw_texture_filtering->value & 0x01) && !fastmoving)
+	{
+		SmoothColorImage(pixels + vmin, vmax - vmin, vid_buffer_width >> 7);
+	}
+
 	SDL_UnlockTexture(texture);
 
 	SDL_RenderCopy(renderer, texture, NULL, NULL);
@@ -2181,22 +2234,22 @@ RE_EndFrame (void)
 	{
 		vid_minv = 0;
 	}
-	if (vid_maxu > vid.width)
+	if (vid_maxu > vid_buffer_width)
 	{
-		vid_maxu = vid.width;
+		vid_maxu = vid_buffer_width;
 	}
-	if (vid_maxv > vid.height)
+	if (vid_maxv > vid_buffer_height)
 	{
-		vid_maxv = vid.height;
+		vid_maxv = vid_buffer_height;
 	}
 
-	vmin = vid_minu + vid_minv  * vid.width;
-	vmax = vid_maxu + vid_maxv  * vid.width;
+	vmin = vid_minu + vid_minv  * vid_buffer_width;
+	vmax = vid_maxu + vid_maxv  * vid_buffer_width;
 
 	// fix to correct limit
-	if (vmax > (vid.height * vid.width))
+	if (vmax > (vid_buffer_height * vid_buffer_width))
 	{
-		vmax = vid.height * vid.width;
+		vmax = vid_buffer_height * vid_buffer_width;
 	}
 
 	// if palette changed need to flush whole buffer
@@ -2213,9 +2266,9 @@ RE_EndFrame (void)
 
 		// search difference end
 		vmax = RE_BufferDifferenceEnd(vmin, vmax);
-		if (vmax > (vid.height * vid.width))
+		if (vmax > (vid_buffer_height * vid_buffer_width))
 		{
-			vmax = vid.height * vid.width;
+			vmax = vid_buffer_height * vid_buffer_width;
 		}
 	}
 
@@ -2250,22 +2303,42 @@ SWimp_SetMode(int *pwidth, int *pheight, int mode, int fullscreen )
 
 	R_Printf(PRINT_ALL, " %dx%d (vid_fullscreen %i)\n", *pwidth, *pheight, fullscreen);
 
+	if (fullscreen == 2)
+	{
+		int real_height, real_width;
+
+		if(ri.GLimp_GetDesktopMode(&real_width, &real_height))
+		{
+			if (real_height)
+			{
+				if (real_height != *pheight)
+				{
+					*pwidth = ((*pheight) * real_width) / real_height;
+				}
+				else
+				{
+					*pwidth = real_width;
+				}
+			}
+		}
+
+		R_Printf(PRINT_ALL, "Used corrected %dx%d mode\n", *pwidth, *pheight);
+	}
+
 	if (!ri.GLimp_InitGraphics(fullscreen, pwidth, pheight))
 	{
 		// failed to set a valid mode in windowed mode
 		return rserr_invalid_mode;
 	}
 
-	SWimp_CreateRender();
-
 	return retval;
 }
 
 static void
-SWimp_CreateRender(void)
+SWimp_CreateRender(int width, int height)
 {
 	swap_current = 0;
-	swap_buffers = (pixel_t*)malloc(vid.height * vid.width * sizeof(pixel_t) * 2);
+	swap_buffers = (pixel_t*)malloc(height * width * sizeof(pixel_t) * 2);
 	if (!swap_buffers)
 	{
 		ri.Sys_Error(ERR_FATAL, "%s: Can't allocate swapbuffer.", __func__);
@@ -2273,20 +2346,20 @@ SWimp_CreateRender(void)
 		return;
 	}
 	swap_frames[0] = swap_buffers;
-	swap_frames[1] = swap_buffers + vid.height * vid.width * sizeof(pixel_t);
+	swap_frames[1] = swap_buffers + height * width * sizeof(pixel_t);
 	vid_buffer = swap_frames[swap_current&1];
 	// Need to rewrite whole frame
 	VID_WholeDamageBuffer();
 
-	sintable = (int*)malloc((vid.width+CYCLE) * sizeof(int));
-	intsintable = (int*)malloc((vid.width+CYCLE) * sizeof(int));
-	blanktable = (int*)malloc((vid.width+CYCLE) * sizeof(int));
+	sintable = (int*)malloc((width+CYCLE) * sizeof(int));
+	intsintable = (int*)malloc((width+CYCLE) * sizeof(int));
+	blanktable = (int*)malloc((width+CYCLE) * sizeof(int));
 
-	newedges = (edge_t**)malloc(vid.width * sizeof(edge_t *));
-	removeedges = (edge_t**)malloc(vid.width * sizeof(edge_t *));
+	newedges = (edge_t**)malloc(width * sizeof(edge_t *));
+	removeedges = (edge_t**)malloc(width * sizeof(edge_t *));
 
-	warp_rowptr = (byte**)malloc((vid.width+AMP2*2) * sizeof(byte*));
-	warp_column = (int*)malloc((vid.width+AMP2*2) * sizeof(int));
+	warp_rowptr = (byte**)malloc((width+AMP2*2) * sizeof(byte*));
+	warp_column = (int*)malloc((width+AMP2*2) * sizeof(int));
 
 	// count of "out of items"
 	r_outofsurfaces = false;
@@ -2312,9 +2385,10 @@ SWimp_CreateRender(void)
 
 	R_ReallocateMapBuffers();
 
-	r_warpbuffer = (pixel_t*)malloc(vid.height * vid.width * sizeof(pixel_t));
+	r_warpbuffer = (pixel_t*)malloc(height * width * sizeof(pixel_t));
 
-	if ((vid.width >= 2048) && (sizeof(shift20_t) == 4)) // 2k+ resolution and 32 == shift20_t
+	// 2k+ resolution and 32 == shift20_t
+	if ((width >= 2048) && (sizeof(shift20_t) == 4))
 	{
 		shift_size = 18;
 	}
@@ -2323,9 +2397,9 @@ SWimp_CreateRender(void)
 		shift_size = 20;
 	}
 
-	R_InitTurb ();
+	R_InitTurb (width);
 
-	vid_polygon_spans = (espan_t*)malloc(sizeof(espan_t) * (vid.height + 1));
+	vid_polygon_spans = (espan_t*)malloc(sizeof(espan_t) * (height + 1));
 
 	memset(sw_state.currentpalette, 0, sizeof(sw_state.currentpalette));
 
@@ -2372,26 +2446,26 @@ static void
 R_ScreenShot_f(void)
 {
 	int x, y;
-	byte *buffer = (byte*)malloc(vid.width * vid.height * 3);
+	byte *buffer = (byte*)malloc(vid_buffer_width * vid_buffer_height * 3);
 	const unsigned char *palette = sw_state.currentpalette;
 
 	if (!buffer)
 	{
-		R_Printf(PRINT_ALL, "R_ScreenShot: Couldn't malloc %d bytes\n", vid.width * vid.height * 3);
+		R_Printf(PRINT_ALL, "R_ScreenShot: Couldn't malloc %d bytes\n", vid_buffer_width * vid_buffer_height * 3);
 		return;
 	}
 
-	for (x=0; x < vid.width; x ++)
+	for (x=0; x < vid_buffer_width; x ++)
 	{
-		for (y=0; y < vid.height; y ++) {
-			int buffer_pos = y * vid.width + x;
+		for (y=0; y < vid_buffer_height; y ++) {
+			int buffer_pos = y * vid_buffer_width + x;
 			buffer[buffer_pos * 3 + 0] = palette[vid_buffer[buffer_pos] * 4 + 2]; // red
 			buffer[buffer_pos * 3 + 1] = palette[vid_buffer[buffer_pos] * 4 + 1]; // green
 			buffer[buffer_pos * 3 + 2] = palette[vid_buffer[buffer_pos] * 4 + 0]; // blue
 		}
 	}
 
-	ri.Vid_WriteScreenshot(vid.width, vid.height, 3, buffer);
+	ri.Vid_WriteScreenshot(vid_buffer_width, vid_buffer_height, 3, buffer);
 
 	free(buffer);
 }
