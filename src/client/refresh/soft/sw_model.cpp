@@ -914,7 +914,7 @@ Mod_LoadPlanes (lump_t *l)
 	}
 
 	count = l->filelen / sizeof(*in);
-	out = (mplane_t*)Hunk_Alloc((count+6)*sizeof(*out));		// extra for skybox
+	out = (cplane_t*)Hunk_Alloc((count+6)*sizeof(*out));		// extra for skybox
 
 	loadmodel->planes = out;
 	loadmodel->numplanes = count;

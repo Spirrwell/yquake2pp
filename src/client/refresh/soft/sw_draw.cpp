@@ -342,7 +342,7 @@ RE_Draw_StretchRaw (int x, int y, int w, int h, int cols, int rows, byte *data)
 	{
 		if (cols < (w / 3) || rows < (h / 3))
 		{
-			image_scaled = malloc(cols * rows * 9);
+			image_scaled = (byte*)malloc(cols * rows * 9);
 
 			scale3x(data, image_scaled, cols, rows);
 
@@ -351,7 +351,7 @@ RE_Draw_StretchRaw (int x, int y, int w, int h, int cols, int rows, byte *data)
 		}
 		else
 		{
-			image_scaled = malloc(cols * rows * 4);
+			image_scaled = (byte*)malloc(cols * rows * 4);
 
 			scale2x(data, image_scaled, cols, rows);
 

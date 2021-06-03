@@ -344,7 +344,7 @@ R_Convert32To8bit(unsigned char* pic_in, unsigned char* pic_out, size_t size)
 static void
 R_FixPalette(unsigned char* pixels, size_t size, rgb_t* pallette)
 {
-	unsigned char* convert = malloc(256);
+	unsigned char* convert = (unsigned char*)malloc(256);
 
 	size_t i;
 
@@ -427,7 +427,7 @@ R_LoadM8 (char *name, imagetype_t type)
 		return r_notexture_mip;
 	}
 
-	image->pixels[0] = malloc (size);
+	image->pixels[0] = (byte*)malloc (size);
 	image->pixels[1] = image->pixels[0] + image->width*image->height;
 	image->pixels[2] = image->pixels[1] + image->width*image->height/4;
 	image->pixels[3] = image->pixels[2] + image->width*image->height/16;
@@ -602,7 +602,7 @@ R_LoadImage(char *name, const char* namewe, const char *ext, imagetype_t type)
 				realwidth = width;
 				realheight = height;
 
-				scaled = malloc(width * height * 4);
+				scaled = (byte*)malloc(width * height * 4);
 				if (!scaled)
 					return NULL;
 

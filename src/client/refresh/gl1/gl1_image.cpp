@@ -1071,7 +1071,7 @@ LoadM8(char *origname, imagetype_t type)
 		return r_notexture;
 	}
 
-	image_buffer = malloc (width * height * 4);
+	image_buffer = (unsigned char*)malloc (width * height * 4);
 	for(int i=0; i<width * height; i++)
 	{
 		unsigned char value = *((byte *)mt + ofs + i);
